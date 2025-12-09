@@ -1,6 +1,7 @@
 package com.leetcode.authservice.application.producer;
 
 
+import com.leetcode.authservice.domain.event.PasswordResetEvent;
 import com.leetcode.authservice.domain.event.UserRegisteredEvent;
 import com.leetcode.authservice.infrastructure.config.RabbitMQConfig;
 import lombok.RequiredArgsConstructor;
@@ -22,5 +23,13 @@ public class EventPublisher {
                 event
         );
         log.info("Event sent to RabbitMQ: " + event.email());
+    }
+
+    public void sendPasswordResetEvent(PasswordResetEvent event) {
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.RESET_ROUTING_KEY,
+                event
+        );
     }
 }
