@@ -31,4 +31,17 @@ public class EmailSenderService {
             log.error("Failed to send Email: {}", e.getMessage());
         }
     }
+
+    public void sendPasswordResetEmail(String toEmail, String token) {
+        try {
+            SimpleMailMessage email = new SimpleMailMessage();
+            email.setTo(toEmail);
+            email.setSubject("Reset Password");
+            email.setText("Click here to verify: http://localhost:8080/auth-service/api/auth/reset-password?token=" + token);
+
+            mailSender.send(email);
+        } catch (Exception e) {
+            log.error("Failed to send reset Email: {}", e.getMessage());
+        }
+    }
 }
