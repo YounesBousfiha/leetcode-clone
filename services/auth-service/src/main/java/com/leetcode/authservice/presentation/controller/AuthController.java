@@ -1,8 +1,45 @@
 package com.leetcode.authservice.presentation.controller;
 
 
-import org.springframework.web.bind.annotation.RestController;
+import com.leetcode.authservice.application.service.AuthService;
+import com.leetcode.authservice.presentation.dto.request.LoginRequest;
+import com.leetcode.authservice.presentation.dto.request.RegisterRequest;
+import com.leetcode.authservice.presentation.dto.response.LoginResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
+
+    private final AuthService authService;
+
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(this.authService.login(request));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request) {
+        String message = this.authService.register(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(Map.of(
+                        "message", message
+                ));
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verify(
+            @RequestParam(name = "token") String verificationToken
+    ) {
+        return ResponseEntity.ok(this.authService.verifyAccount(verificationToken));
+    }
 }
