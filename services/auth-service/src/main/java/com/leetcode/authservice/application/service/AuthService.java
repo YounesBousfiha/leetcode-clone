@@ -1,9 +1,11 @@
 package com.leetcode.authservice.application.service;
 
 
+import com.leetcode.authservice.application.producer.EventPublisher;
 import com.leetcode.authservice.domain.entity.EmailVerification;
 import com.leetcode.authservice.domain.entity.User;
 import com.leetcode.authservice.domain.enums.Role;
+import com.leetcode.authservice.domain.event.UserRegisteredEvent;
 import com.leetcode.authservice.domain.exception.*;
 import com.leetcode.authservice.infrastructure.repository.EmailVerificationRepository;
 import com.leetcode.authservice.infrastructure.repository.UserRepository;
@@ -28,14 +30,11 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationRepository emailVerificationRepository;
     private final JwtUtil jwtUtil;
-
-    // private final EventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
 
     public String register(RegisterRequest request) {
-        log.info("Registration attempt for email: {}", request.email());
 
         if(userRepository.existsByEmail(request.email())) {
-            log.warn("Registration failed - email already exists: {}", request.email());
             throw new SameEmailRegistration("Email Already Exists");
         }
 
@@ -54,6 +53,7 @@ public class AuthService {
         log.info("User saved with ID: {}, Email: {}", user.getId(), user.getEmail());
 
         String token = UUID.randomUUID().toString();
+
         EmailVerification emailVerification = EmailVerification.builder()
                 .uuid(UUID.randomUUID())
                 .verificationToken(token)
@@ -63,9 +63,15 @@ public class AuthService {
                 .build();
 
         this.emailVerificationRepository.save(emailVerification);
-        log.info("Email verification token created for user: {}", user.getEmail());
-        //  Send Event via rabbitMQ to notification-System
-        //  Send Event via RabbitMQ to user-service
+
+        UserRegisteredEvent event = UserRegisteredEvent.builder()
+                .displayName(user.getDisplayName())
+                .email(user.getEmail())
+                .userId(user.getId().toString())
+                .verificationToken(token)
+                .build();
+
+        eventPublisher.sendUserRegisteredEvent(event);
 
         return "Registration successful. Please check your email to verify your account.";
     }
