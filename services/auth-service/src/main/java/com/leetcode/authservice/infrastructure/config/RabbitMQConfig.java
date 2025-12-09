@@ -13,6 +13,7 @@ public class RabbitMQConfig {
 
     public static final String EXCHANGE_NAME = "auth.exchange";
     public static final String ROUTING_KEY = "auth.user.registered";
+    public static final String RESET_ROUTING_KEY = "auth.password.reset";
 
     @Bean
     public TopicExchange exchange() {
