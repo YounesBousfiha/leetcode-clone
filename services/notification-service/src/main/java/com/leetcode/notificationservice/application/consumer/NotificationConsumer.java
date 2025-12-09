@@ -1,6 +1,7 @@
 package com.leetcode.notificationservice.application.consumer;
 
 import com.leetcode.notificationservice.application.service.EmailSenderService;
+import com.leetcode.notificationservice.domain.event.PasswordResetEvent;
 import com.leetcode.notificationservice.domain.event.UserRegisterEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -15,5 +16,10 @@ public class NotificationConsumer {
     @RabbitListener(queues = "notification.email.queue")
     public void handleUserRegistered(UserRegisterEvent event) {
         emailSenderService.sendVerificationEmail(event.email(), event.verificationToken());
+    }
+
+    @RabbitListener(queues = "notification.email.queue")
+    public void handlePasswordReset(PasswordResetEvent event) {
+        emailSenderService.sendPasswordResetEmail(event.email(), event.token());
     }
 }
