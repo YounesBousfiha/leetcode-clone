@@ -1,0 +1,19 @@
+package com.leetcode.notificationservice.application.consumer;
+
+import com.leetcode.notificationservice.application.service.EmailSenderService;
+import com.leetcode.notificationservice.domain.event.UserRegisterEvent;
+import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class NotificationConsumer {
+
+    private final EmailSenderService emailSenderService;
+
+    @RabbitListener(queues = "notification.email.queue")
+    public void handleUserRegistered(UserRegisterEvent event) {
+        emailSenderService.sendVerificationEmail(event.email(), event.verificationToken());
+    }
+}
