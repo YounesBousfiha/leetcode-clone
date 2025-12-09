@@ -2,8 +2,10 @@ package com.leetcode.authservice.presentation.controller;
 
 
 import com.leetcode.authservice.application.service.AuthService;
+import com.leetcode.authservice.presentation.dto.request.ForgetPasswordRequest;
 import com.leetcode.authservice.presentation.dto.request.LoginRequest;
 import com.leetcode.authservice.presentation.dto.request.RegisterRequest;
+import com.leetcode.authservice.presentation.dto.request.ResetPasswordRequest;
 import com.leetcode.authservice.presentation.dto.response.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -41,5 +43,22 @@ public class AuthController {
             @RequestParam(name = "token") String verificationToken
     ) {
         return ResponseEntity.ok(this.authService.verifyAccount(verificationToken));
+    }
+
+    @PostMapping("/forget-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgetPasswordRequest request) {
+        return ResponseEntity.ok(this.authService.initiatePasswordReset(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestParam("token") String token,
+            @RequestBody String newPassword
+    ) {
+        ResetPasswordRequest request = ResetPasswordRequest.builder()
+                .token(token)
+                .newPassword(newPassword)
+                .build();
+        return ResponseEntity.ok(this.authService.resetPassword(request));
     }
 }
