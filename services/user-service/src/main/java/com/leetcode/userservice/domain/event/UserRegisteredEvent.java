@@ -1,8 +1,5 @@
-package com.leetcode.authservice.domain.event;
+package com.leetcode.userservice.domain.event;
 
-import lombok.Builder;
-
-@Builder
 public record UserRegisteredEvent(
         String userId,
         String email,
