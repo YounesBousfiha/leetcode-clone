@@ -152,6 +152,8 @@ public class AuthService {
         return "Password reset link sent to your email";
     }
 
+
+    // TODO: Password didn't change fix it later
     public String resetPassword(ResetPasswordRequest request ) {
         PasswordResetToken resetToken = this.resetTokenRepository.findByToken(request.token())
                 .orElseThrow(() -> new RuntimeException("No such Token"));
