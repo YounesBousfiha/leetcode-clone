@@ -17,8 +17,8 @@ public class RouteValidator {
             "/api/auth/refresh-token",
             "/api/auth/forgot-password",
             "/api/auth/reset-password",
-            "/eureka"
-
+            "/eureka",
+            "/actuator/health"
     );
 
     public Predicate<ServerHttpRequest> isSecured = request -> openApiEndpoints.stream()
