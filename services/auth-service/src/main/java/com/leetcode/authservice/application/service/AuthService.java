@@ -163,6 +163,7 @@ public class AuthService {
     public LoginResponse refreshToken(String refreshToken) {
         String email = redisService.extractRefreshTokenSubject(refreshToken);
 
+        log.error("EMAIL: {}", email);
         if(email == null) {
             throw new RuntimeException("Refresh Token Invalid or Expired");
         }
@@ -177,6 +178,7 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .userId(user.getId().toString())
                 .role(user.getRole().toString())
+                .email(user.getEmail())
                 .build();
     }
 
