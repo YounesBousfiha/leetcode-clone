@@ -13,6 +13,7 @@ import com.leetcode.authservice.infrastructure.repository.EmailVerificationRepos
 import com.leetcode.authservice.infrastructure.repository.PasswordResetTokenRepository;
 import com.leetcode.authservice.infrastructure.repository.UserRepository;
 import com.leetcode.authservice.infrastructure.security.JwtUtil;
+import com.leetcode.authservice.infrastructure.service.RedisService;
 import com.leetcode.authservice.presentation.dto.request.ForgetPasswordRequest;
 import com.leetcode.authservice.presentation.dto.request.LoginRequest;
 import com.leetcode.authservice.presentation.dto.request.RegisterRequest;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -31,6 +33,7 @@ import java.util.UUID;
 @Slf4j
 public class AuthService {
 
+    private final RedisService redisService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationRepository emailVerificationRepository;
@@ -100,8 +103,13 @@ public class AuthService {
 
         String jwt = jwtUtil.generateToken(user.getDisplayName(), user.getId().toString(), user.getRole().toString());
 
+        String refreshToken = UUID.randomUUID().toString();
+
+        redisService.saveRefreshToken(user.getEmail(), refreshToken);
+
         return LoginResponse.builder()
                 .accessToken(jwt)
+                .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .userId(user.getId().toString())
                 .role(user.getRole().toString())
@@ -152,6 +160,26 @@ public class AuthService {
         return "Password reset link sent to your email";
     }
 
+    public LoginResponse refreshToken(String refreshToken) {
+        String email = redisService.extractRefreshTokenSubject(refreshToken);
+
+        if(email == null) {
+            throw new RuntimeException("Refresh Token Invalid or Expired");
+        }
+
+        User user = this.userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not Found"));
+
+        String newAccessToken = jwtUtil.generateToken(user.getEmail(), user.getId().toString(), user.getRole().toString());
+
+        return LoginResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(refreshToken)
+                .userId(user.getId().toString())
+                .role(user.getRole().toString())
+                .build();
+    }
+
 
     public String resetPassword(ResetPasswordRequest request, String token) {
 
@@ -172,5 +200,23 @@ public class AuthService {
         this.resetTokenRepository.save(resetToken);
 
         return "Password reset successfully. you can now Login";
+    }
+
+    public void logout(String accessToken, String refreshToken) {
+
+        try {
+            Date expirationDate = jwtUtil.expirationDate(accessToken);
+            long ttl = expirationDate.getTime() - System.currentTimeMillis();
+
+            if(ttl > 0) {
+                redisService.blackListAccessToken(accessToken, ttl);
+            }
+
+            if(refreshToken != null && !refreshToken.isEmpty()) {
+                redisService.deleteRefreshToken(refreshToken);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error during logout: " + e.getMessage());
+        }
     }
 }
