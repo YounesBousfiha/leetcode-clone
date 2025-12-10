@@ -1,5 +1,6 @@
 package com.leetcode.notificationservice.infrastructure.config;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -35,13 +36,13 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding registerBinding(Queue registerQueue, TopicExchange exchange) {
+    public Binding registerBinding(@Qualifier("registerQueue") Queue registerQueue, TopicExchange exchange) {
         return BindingBuilder.bind(registerQueue).to(exchange).with(REGISTER_ROUTING_KEY);
     }
 
 
     @Bean
-    public Binding resetBinding(Queue resetQueue, TopicExchange exchange) {
+    public Binding resetBinding(@Qualifier("resetQueue") Queue resetQueue, TopicExchange exchange) {
         return BindingBuilder.bind(resetQueue).to(exchange).with(RESET_ROUTING_KEY);
     }
 
