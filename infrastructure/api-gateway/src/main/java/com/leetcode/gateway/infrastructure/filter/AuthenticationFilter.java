@@ -17,32 +17,32 @@ import java.util.Objects;
 
 @Slf4j
 @Component
-public class AutheticationFilter extends AbstractGatewayFilterFactory<AutheticationFilter.Config> {
+public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
 
-    @Autowired
-    private RouteValidator validator;
+    private final RouteValidator validator;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private RedisService redisService;
+    private final RedisService redisService;
 
-    public AutheticationFilter() {
+    public AuthenticationFilter(RouteValidator validator, JwtUtil jwtUtil, RedisService redisService) {
         super(Config.class);
+
+        this.jwtUtil = jwtUtil;
+        this.redisService = redisService;
+        this.validator = validator;
     }
 
     @Override
     public GatewayFilter apply(Config config) {
         return ((exchange, chain) -> {
             if(validator.isSecured.test(exchange.getRequest())) {
-                if(exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                if(!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                     return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
                 }
 
                 String authHeader = Objects.requireNonNull(exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION)).getFirst();
-
                 if(authHeader != null && authHeader.startsWith("Bearer ")) {
                     authHeader = authHeader.substring(7);
                 }
@@ -53,7 +53,6 @@ public class AutheticationFilter extends AbstractGatewayFilterFactory<Autheticat
                     if(redisService.isTokenBlackListed(authHeader)) {
                         throw new RuntimeException("Token is BlackListed (Logged out)");
                     }
-
                     String userId = jwtUtil.extractUserId(authHeader);
                     String role = jwtUtil.extractRole(authHeader);
 
