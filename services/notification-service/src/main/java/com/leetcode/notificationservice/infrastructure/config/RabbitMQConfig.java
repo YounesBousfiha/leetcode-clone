@@ -13,14 +13,20 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String EXCHANGE_NAME = "auth.exchange";
-    public static final String ROUTING_KEY = "auth.user.registered";
-    public static final String QUEUE_NAME = "notification.email.queue";
+    public static final String REGISTER_ROUTING_KEY = "auth.user.registered";
     public static final String RESET_ROUTING_KEY = "auth.password.reset";
 
+    public static final String REGISTER_QUEUE_NAME = "notification.email.register.queue";
+    public static final String RESET_QUEUE_NAME = "notification.email.reset.queue";
 
     @Bean
-    public Queue notificationQueue() {
-        return new Queue(QUEUE_NAME, true);
+    public Queue registerQueue() {
+        return new Queue(REGISTER_QUEUE_NAME, true);
+    }
+
+    @Bean
+    public Queue resetQueue() {
+        return new Queue(RESET_QUEUE_NAME, true);
     }
 
     @Bean
@@ -29,14 +35,16 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
+    public Binding registerBinding(Queue registerQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(registerQueue).to(exchange).with(REGISTER_ROUTING_KEY);
     }
 
+
     @Bean
-    public Binding resetBinding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(RESET_ROUTING_KEY);
+    public Binding resetBinding(Queue resetQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(resetQueue).to(exchange).with(RESET_ROUTING_KEY);
     }
+
 
     @Bean
     public MessageConverter messageConverter() {
