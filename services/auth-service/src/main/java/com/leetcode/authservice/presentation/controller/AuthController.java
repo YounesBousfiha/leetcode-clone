@@ -2,10 +2,7 @@ package com.leetcode.authservice.presentation.controller;
 
 
 import com.leetcode.authservice.application.service.AuthService;
-import com.leetcode.authservice.presentation.dto.request.ForgetPasswordRequest;
-import com.leetcode.authservice.presentation.dto.request.LoginRequest;
-import com.leetcode.authservice.presentation.dto.request.RegisterRequest;
-import com.leetcode.authservice.presentation.dto.request.ResetPasswordRequest;
+import com.leetcode.authservice.presentation.dto.request.*;
 import com.leetcode.authservice.presentation.dto.response.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -55,5 +52,26 @@ public class AuthController {
             @RequestParam("token") String token,
             @RequestBody ResetPasswordRequest request) {
         return ResponseEntity.ok(this.authService.resetPassword(request, token));
+    }
+
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<LoginResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request.refreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody LogoutRequest request
+    ) {
+        String accessToken = authHeader;
+        if(authHeader != null && authHeader.startsWith("Bearer ")) {
+            accessToken = authHeader.substring(7);
+        }
+
+        authService.logout(accessToken, request.refreshToken());
+
+        return ResponseEntity.noContent().build();
     }
 }
