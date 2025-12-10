@@ -153,7 +153,8 @@ public class AuthService {
     }
 
 
-    // TODO: Password didn't change fix it later
+    // TODO: fix the After password changes  , I can't login
+    // TODO: sometimes when I request reset password Token , it send a email verification mail with token null xD second request it send the reset email
     public String resetPassword(ResetPasswordRequest request ) {
         PasswordResetToken resetToken = this.resetTokenRepository.findByToken(request.token())
                 .orElseThrow(() -> new RuntimeException("No such Token"));
