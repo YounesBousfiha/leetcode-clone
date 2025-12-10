@@ -53,6 +53,10 @@ public class JwtUtil {
         return validateToken(token).getClaim("role").asString();
     }
 
+    public Date expirationDate(String token) {
+        return validateToken(token).getExpiresAt();
+    }
+
 
 
 }
