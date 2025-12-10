@@ -53,12 +53,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(
             @RequestParam("token") String token,
-            @RequestBody String newPassword
-    ) {
-        ResetPasswordRequest request = ResetPasswordRequest.builder()
-                .token(token)
-                .newPassword(newPassword)
-                .build();
-        return ResponseEntity.ok(this.authService.resetPassword(request));
+            @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(this.authService.resetPassword(request, token));
     }
 }
