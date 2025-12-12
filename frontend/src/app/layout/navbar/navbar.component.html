@@ -1,0 +1,61 @@
+<nav class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 h-16">
+
+  <div class="container mx-auto px-4 h-full flex items-center justify-between gap-4">
+
+    <div class="flex items-center gap-8">
+
+      <a routerLink="/" class="flex items-center gap-2 no-underline">
+        <div class="bg-orange-500 text-white p-1.5 rounded-lg">
+          <i class="pi pi-code font-bold text-xl"></i>
+        </div>
+        <span class="font-bold text-xl text-slate-800 tracking-tight">CodeMaster</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-6">
+        <a routerLink="/problems" routerLinkActive="text-orange-600 font-semibold" class="text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium no-underline">
+          Problems
+        </a>
+        <a routerLink="/contest" routerLinkActive="text-orange-600 font-semibold" class="text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium no-underline">
+          Contest
+        </a>
+        <a routerLink="/about" class="text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium no-underline">
+          About
+        </a>
+      </div>
+    </div>
+
+    <div class="hidden lg:block flex-1 max-w-md mx-4">
+      <p-iconfield iconPosition="left">
+        <p-inputicon class="pi pi-search" />
+        <input
+          type="text"
+          pInputText
+          placeholder="Search problems, users..."
+          class="w-full p-inputtext-sm bg-slate-50 border-slate-200 focus:border-orange-500"
+        />
+      </p-iconfield>
+    </div>
+
+    <div class="flex items-center gap-3">
+
+      <a routerLink="/login">
+        <p-button
+          label="Log in"
+          [text]="true"
+          severity="secondary"
+          styleClass="text-slate-600 hover:text-slate-900 font-medium"
+        ></p-button>
+      </a>
+
+      <a routerLink="/register">
+        <p-button
+          label="Sign up"
+          size="small"
+          styleClass="bg-slate-900 border-slate-900 hover:bg-slate-800 px-4"
+        ></p-button>
+      </a>
+
+    </div>
+
+  </div>
+</nav>
