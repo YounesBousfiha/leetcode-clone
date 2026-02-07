@@ -26,6 +26,10 @@ public class UserProfile {
 
     private String displayName;
 
+    private String bio;
+    private String githubUrl;
+    private String linkedinUrl;
+
     @Builder.Default
     private Long score = 0L;
 
