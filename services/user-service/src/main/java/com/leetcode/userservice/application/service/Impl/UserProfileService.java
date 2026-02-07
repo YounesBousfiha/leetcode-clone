@@ -63,7 +63,7 @@ public class UserProfileService implements IUserProfileService {
     public UserProfileResponse getProfileById(String id) {
         UserProfile profile = userProfileRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
-
+        log.info("Profile ID: {}", profile.getId());
         return mapper.toResponse(profile);
     }
 }
