@@ -22,6 +22,7 @@ public interface UserProfileMapper {
     @Mapping(target = "linkedinUrl", ignore = true)
     UserProfile toEntity(UserRegisteredEvent event);
 
+    @Mapping(target = "userId", source = "id")
     UserProfileResponse toResponse(UserProfile userProfile);
 
 
