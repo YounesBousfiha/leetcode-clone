@@ -1,7 +1,8 @@
-package com.leetcode.authservice.application.service;
+package com.leetcode.authservice.application.service.impl;
 
 
 import com.leetcode.authservice.application.producer.EventPublisher;
+import com.leetcode.authservice.application.service.IAuthService;
 import com.leetcode.authservice.domain.entity.EmailVerification;
 import com.leetcode.authservice.domain.entity.PasswordResetToken;
 import com.leetcode.authservice.domain.entity.User;
@@ -31,7 +32,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuthService {
+public class AuthService implements IAuthService {
 
     private final RedisService redisService;
     private final UserRepository userRepository;
