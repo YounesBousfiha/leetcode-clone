@@ -1,4 +1,4 @@
-package com.leetcode.userservice.application.service.Impl;
+package com.leetcode.userservice.application.service.impl;
 
 
 import com.leetcode.userservice.application.mapper.UserProfileMapper;
