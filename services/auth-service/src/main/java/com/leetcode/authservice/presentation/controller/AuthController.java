@@ -1,7 +1,7 @@
 package com.leetcode.authservice.presentation.controller;
 
 
-import com.leetcode.authservice.application.service.AuthService;
+import com.leetcode.authservice.application.service.IAuthService;
 import com.leetcode.authservice.presentation.dto.request.*;
 import com.leetcode.authservice.presentation.dto.response.LoginResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final IAuthService authService;
 
 
     @GetMapping("/demo")
