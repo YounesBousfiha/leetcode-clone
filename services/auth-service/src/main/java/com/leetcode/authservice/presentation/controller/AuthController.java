@@ -21,11 +21,6 @@ public class AuthController {
     private final IAuthService authService;
 
 
-    @GetMapping("/demo")
-    public ResponseEntity<String> demo() {
-        return ResponseEntity.ok("Hello from Secured Endpoint");
-    }
-
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(this.authService.login(request));
