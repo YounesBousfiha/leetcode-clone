@@ -9,6 +9,6 @@ public record UserProfileResponse(
         String displayName,
         String bio,
         String githubUrl,
-        String linkdeinUrl,
+        String linkedinUrl,
         Long score) {
 }
