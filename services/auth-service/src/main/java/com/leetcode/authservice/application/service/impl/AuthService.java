@@ -59,7 +59,7 @@ public class AuthService implements IAuthService {
                 .verified(false)
                 .build();
 
-        this.userRepository.save(user);
+        User newUser = this.userRepository.save(user);
         log.info("User saved with ID: {}, Email: {}", user.getId(), user.getEmail());
 
         String token = UUID.randomUUID().toString();
@@ -75,9 +75,10 @@ public class AuthService implements IAuthService {
         this.emailVerificationRepository.save(emailVerification);
 
         UserRegisteredEvent event = UserRegisteredEvent.builder()
-                .displayName(user.getDisplayName())
-                .email(user.getEmail())
-                .userId(user.getId().toString())
+                .userId(newUser.getId().toString())
+                .displayName(newUser.getDisplayName())
+                .email(newUser.getEmail())
+                .userId(newUser.getId().toString())
                 .verificationToken(token)
                 .build();
 
