@@ -27,6 +27,7 @@ public class EmailSenderService {
             email.setText("Click here to verify: http://localhost:8080/auth-service/api/auth/verify?token=" + verificationToken);
 
             mailSender.send(email);
+
         } catch (Exception e) {
             log.error("Failed to send Email: {}", e.getMessage());
         }
