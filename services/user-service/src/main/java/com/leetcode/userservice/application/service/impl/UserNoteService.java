@@ -23,7 +23,7 @@ public class UserNoteService  implements IUserNoteService {
     private final UserNoteMapper mapper;
 
     @Override
-    public UserNoteResponse save(String userId, UserNoteRequest request) {
+    public UserNoteResponse saveNote(String userId, UserNoteRequest request) {
         UserProfile user = userProfileRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -33,11 +33,18 @@ public class UserNoteService  implements IUserNoteService {
                         .problemId(request.problemId())
                         .build());
 
-        note.setContent(request.content);
+        mapper.updateEntity(request, note);
 
         UserNote newNote = userNoteRepository.save(note);
 
         return mapper.toResponse(newNote);
 
+    }
+
+    @Override
+    public UserNoteResponse getNote(String userId, String problemId) {
+        return userNoteRepository.findByUserProfileIdAndProblemId(UUID.fromString(userId), problemId)
+                .map(mapper::toResponse)
+                .orElse(null);
     }
 }
