@@ -19,10 +19,10 @@ public class TestCase {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT",nullable = false)
     private String input;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String expectedOutput;
 
     private boolean isPublic;
