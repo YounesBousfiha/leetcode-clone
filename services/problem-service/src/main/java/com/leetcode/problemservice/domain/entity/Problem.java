@@ -26,7 +26,7 @@ public class Problem {
     @Column(nullable = false, unique = true)
     private String slug;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -57,6 +57,9 @@ public class Problem {
     @Builder.Default
     private List<String> hints = new ArrayList<>();
 
+    @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<CodeTemplate> codeTemplates = new ArrayList<>();
 
     public void addTestCase(TestCase testCase) {
         testCases.add(testCase);
