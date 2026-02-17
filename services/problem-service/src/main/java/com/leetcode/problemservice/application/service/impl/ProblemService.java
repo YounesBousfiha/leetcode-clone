@@ -28,7 +28,7 @@ public class ProblemService implements IProblemService {
 
     private final ProblemRepository problemRepository;
     private  final TagRepository tagRepository;
-    private ProblemMapper problemMapper;
+    private final ProblemMapper problemMapper;
 
     @Override
     public ProblemDetailResponse createProblem(CreateProblemRequest request) {
