@@ -2,11 +2,16 @@ package com.leetcode.problemservice.domain.entity;
 
 
 import jakarta.persistence.*;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.UUID;
 
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class CodeTemplate {
 
 
