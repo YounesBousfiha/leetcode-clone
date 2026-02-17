@@ -66,6 +66,10 @@ public class Problem {
         testCase.setProblem(this);
     }
 
+    public void addTemplate(CodeTemplate template) {
+        codeTemplates.add(template);
+    }
+
     public void removeTestCase(TestCase testCase) {
         testCases.remove(testCase);
         testCase.setProblem(null);
