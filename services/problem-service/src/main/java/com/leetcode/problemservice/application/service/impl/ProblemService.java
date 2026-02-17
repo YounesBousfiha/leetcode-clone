@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -84,16 +85,28 @@ public class ProblemService implements IProblemService {
 
     @Override
     public Page<ProblemListResponse> getAllProblems(Pageable pageable) {
-        return null;
+        return problemRepository.findAll(pageable)
+                .map(problemMapper::toListResponse);
     }
 
     @Override
     public ProblemDetailResponse getProblemBySlug(String slug) {
-        return null;
+        Problem problem = this.problemRepository.findBySlug(slug)
+                .orElseThrow(() -> new RuntimeException("Problem not Found"));
+
+        return problemMapper.toDetailResponse(problem);
     }
 
     @Override
     public void deleteProblem(String id) {
 
+        UUID uuid = UUID.fromString(id);
+        if(!problemRepository.existsById(uuid)) {
+            throw new RuntimeException("Problem not found with Id: " + id);
+        }
+
+        problemRepository.deleteById(uuid);
+
+        log.info("Problem deleted successfully with id: {}", id);
     }
 }
