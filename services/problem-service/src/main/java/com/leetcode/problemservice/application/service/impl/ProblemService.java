@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Set;
 import java.util.UUID;
@@ -108,5 +110,13 @@ public class ProblemService implements IProblemService {
         problemRepository.deleteById(uuid);
 
         log.info("Problem deleted successfully with id: {}", id);
+    }
+
+    @Override
+    public ProblemDetailResponse getProblemForJudge(@PathVariable("slug") String slug) {
+        Problem problem = problemRepository.findBySlug(slug)
+                .orElseThrow(() -> new RuntimeException("Problem not Found"));
+
+        return problemMapper.toInternalResponse(problem);
     }
 }
