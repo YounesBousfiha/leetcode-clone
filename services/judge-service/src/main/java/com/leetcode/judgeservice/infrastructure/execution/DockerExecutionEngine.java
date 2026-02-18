@@ -113,6 +113,6 @@ public class DockerExecutionEngine implements ICodeExecutionEngine {
     }
 
     private void deleteFolder(File file) {
-        /* */
+        file.delete();
     }
 }
