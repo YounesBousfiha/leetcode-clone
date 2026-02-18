@@ -51,4 +51,9 @@ public class ProblemController {
         problemService.deleteProblem(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/internal/{slug}")
+    public ResponseEntity<ProblemDetailResponse> getProblemForJudge(@PathVariable("slug") String slug) {
+        return ResponseEntity.ok(problemService.getProblemForJudge(slug));
+    }
 }
