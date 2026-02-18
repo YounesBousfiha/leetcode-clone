@@ -15,4 +15,6 @@ public interface IProblemService {
 
     void deleteProblem(String id);
 
+    ProblemDetailResponse getProblemForJudge(String slug);
+
 }
