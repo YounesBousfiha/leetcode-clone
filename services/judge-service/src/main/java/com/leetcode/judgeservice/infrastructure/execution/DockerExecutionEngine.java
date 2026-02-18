@@ -2,6 +2,9 @@ package com.leetcode.judgeservice.infrastructure.execution;
 
 import com.leetcode.judgeservice.application.service.ICodeExecutionEngine;
 import com.leetcode.judgeservice.domain.entity.SubmissionResult;
+import com.leetcode.judgeservice.domain.enums.ProgrammingLanguage;
+import com.leetcode.judgeservice.domain.exception.CodeExecutionException;
+import com.leetcode.judgeservice.infrastructure.execution.strategy.ILanguagesStrategy;
 import com.netflix.discovery.provider.Serializer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,38 +15,63 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class DockerExecutionEngine implements ICodeExecutionEngine {
 
-    private static final String IMAGE = "openjdk:17-alpine";
+    private final Map<ProgrammingLanguage, ILanguagesStrategy> strategies;
     private static final String TEMP_DIR = System.getProperty("user.dir") + "/temp";
+
+
+    public DockerExecutionEngine(List<ILanguagesStrategy> strategyList) {
+        this.strategies = strategyList.stream()
+                .collect(Collectors.toMap(ILanguagesStrategy::getLanguage, Function.identity()));
+    }
+
     @Override
     public SubmissionResult executeCode(String userCode, String language, String input, String expectedOutput) {
+        ProgrammingLanguage langEnum;
+
+        try {
+            langEnum = ProgrammingLanguage.valueOf(language.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CodeExecutionException("Invalid language format: " + language);
+        }
+
+        ILanguagesStrategy strategy = strategies.get(langEnum);
+        if(strategy == null) {
+            throw new CodeExecutionException("Language strategy not found for: " + language);
+        }
+
         String executionId = UUID.randomUUID().toString();
         Path folder = Path.of(TEMP_DIR, executionId);
 
-
         try {
-
             Files.createDirectories(folder);
-            createMainFile(folder, userCode);
+
+            String wrappedCode = strategy.wrapCode(userCode);
+            String fileName = strategy.getFileName();
+
+            Files.writeString(folder.resolve(fileName), wrappedCode);
 
             ProcessBuilder builder = new ProcessBuilder(
                     "docker", "run", "--rm",
+                    "--memory=256m",
+                    "--cpus=0.5",
                     "-v", folder.toAbsolutePath() + ":/app",
                     "-w", "/app",
-                    IMAGE,
-                    "/bin/sh", "-c", "javac Main.java && java Main"
+                    strategy.getDockerImage(),
+                    "/bin/sh", "-c", strategy.getRunCommand()
             );
 
             Process process = builder.start();
-
-            String output = readStream(process.getInputStream());
-            String error = readStream(process.getErrorStream());
 
             boolean finished = process.waitFor(3, TimeUnit.SECONDS);
 
@@ -52,28 +80,28 @@ public class DockerExecutionEngine implements ICodeExecutionEngine {
                 return buildResult(false, "Time Limit Exceeded", 3000.0);
             }
 
+            String output = readStream(process.getInputStream());
+            String error = readStream(process.getErrorStream());
+
             if(process.exitValue() != 0) {
-                return buildResult(false, "Runtime Error: " + error, 0.0);
+                return buildResult(false, "Runtime Error: " + error + "\n" + output, 0.0);
             }
 
             boolean passed = output.trim().equals(expectedOutput.trim());
-            return buildResult(passed, output.trim(), 100.0);
 
+            return buildResult(passed, output.trim(), 100.0);
         } catch (Exception e) {
-            log.error("Execution failed", e);
-            return buildResult(false, "System Error", 0.0);
+            log.error("Execution failed for ID: " + executionId, e);
+            return buildResult(false , "System Error: " + e.getMessage(), 0.0);
         } finally {
             deleteFolder(folder.toFile());
         }
     }
 
-    private void createMainFile(Path folder, String code) throws IOException {
-        String content = "public class Main { public static void main(String[] args) { " + code +"}}";
-        Files.writeString(folder.resolve("Main.java"), content);
-    }
-
     private String readStream(InputStream s) throws IOException {
-        return new String(s.readAllBytes());
+        try (s) {
+            return new String(s.readAllBytes());
+        }
     }
 
     private SubmissionResult buildResult(boolean passed, String output, Double time) {
