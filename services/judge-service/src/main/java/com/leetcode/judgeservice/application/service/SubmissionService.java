@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +26,10 @@ public class SubmissionService {
     private final SubmissionMapper mapper;
 
     @Transactional
-    public SubmissionResponse submit(SubmissionRequest request) {
+    public SubmissionResponse submit(UUID userId, SubmissionRequest request) {
 
         Submission submission = mapper.toEntity(request);
-        submission.setUserID(); // get the real userId
+        submission.setUserID(userId);
         submission = repository.save(submission);
 
 
