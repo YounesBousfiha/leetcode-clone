@@ -6,9 +6,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "problem-service", path = "/api/problems")
+@FeignClient(name = "problem-service")
 public interface ProblemFeignClient {
 
-    @GetMapping("/{slug}")
+    @GetMapping("/api/problems/internal/{slug}")
     ProblemDetailResponse getProblem(@PathVariable("slug") String slug);
 }
