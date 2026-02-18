@@ -6,6 +6,7 @@ import com.leetcode.problemservice.domain.entity.Problem;
 import com.leetcode.problemservice.domain.entity.Tag;
 import com.leetcode.problemservice.domain.entity.TestCase;
 import com.leetcode.problemservice.prensentation.dto.*;
+import java.util.Collections;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -32,7 +33,7 @@ public interface ProblemMapper {
 
     @Named("filterPublicTestCases")
     default List<TestCaseDto> filterPublicTestCases(List<TestCase> testCases) {
-        if(testCases == null) return null;
+        if(testCases == null) return Collections.emptyList();
         return testCases.stream()
                 .filter(TestCase::isPublic)
                 .map(this::toTestCaseDto)
@@ -48,5 +49,10 @@ public interface ProblemMapper {
     CodeTemplate toCodeTemplateEntity(CodeTemplateDto dto);
 
     TagDto toTagDto(Tag tag);
+
+
+    @Mapping(target = "examples", source = "testCases")
+    @Mapping(target = "templates", source = "codeTemplates")
+    ProblemDetailResponse toInternalResponse(Problem problem);
 
 }
