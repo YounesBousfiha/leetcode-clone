@@ -7,6 +7,7 @@ import com.leetcode.problemservice.prensentation.dto.ProblemDetailResponse;
 import com.leetcode.problemservice.prensentation.dto.ProblemListResponse;
 import jakarta.ws.rs.Path;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/problems")
 @RequiredArgsConstructor
+@Slf4j
 public class ProblemController {
 
     private final IProblemService problemService;
@@ -36,10 +38,11 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getAllProblems(pageable));
     }
 
-    @GetMapping("{slug}")
+    @GetMapping("/{slug}")
     public ResponseEntity<ProblemDetailResponse> getProblemBySlug(
-            @PathVariable String slug
+            @PathVariable("slug") String slug
     ) {
+        log.info("SLUG: {}", slug);
         return ResponseEntity.ok(problemService.getProblemBySlug(slug));
     }
 
