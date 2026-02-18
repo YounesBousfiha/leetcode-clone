@@ -112,7 +112,21 @@ public class DockerExecutionEngine implements ICodeExecutionEngine {
                 .build();
     }
 
-    private void deleteFolder(File file) {
-        file.delete();
+    private void deleteFolder(File directory) {
+        if(directory.exists()) {
+            File[] files = directory.listFiles();
+
+            if(files != null) {
+                for(File file : files) {
+                    if(file.isDirectory()) {
+                        deleteFolder(file);
+                    } else {
+                        file.delete();
+                    }
+                }
+            }
+        }
+
+        directory.delete();
     }
 }
