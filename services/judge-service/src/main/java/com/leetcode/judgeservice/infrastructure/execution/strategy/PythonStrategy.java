@@ -31,4 +31,9 @@ public class PythonStrategy  implements ILanguagesStrategy{
                 "import math\n" +
                 userCode;
     }
+
+    @Override
+    public String getFileName() {
+        return "main" + getFileExtension();
+    }
 }
