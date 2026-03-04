@@ -2,10 +2,10 @@ package com.leetcode.problemservice.prensentation.controller;
 
 
 import com.leetcode.problemservice.application.service.IProblemService;
+import com.leetcode.problemservice.domain.enums.Difficulty;
 import com.leetcode.problemservice.prensentation.dto.CreateProblemRequest;
 import com.leetcode.problemservice.prensentation.dto.ProblemDetailResponse;
 import com.leetcode.problemservice.prensentation.dto.ProblemListResponse;
-import jakarta.ws.rs.Path;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,7 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/problems")
@@ -36,6 +36,23 @@ public class ProblemController {
             @PageableDefault(size = 20)Pageable pageable
             ) {
         return ResponseEntity.ok(problemService.getAllProblems(pageable));
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ProblemListResponse>> filterProblems(
+            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) List<String> tags,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return ResponseEntity.ok(problemService.filterProblems(difficulty, tags, pageable));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProblemListResponse>> searchProblems(
+            @RequestParam String keyword,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return ResponseEntity.ok(problemService.searchProblems(keyword, pageable));
     }
 
     @GetMapping("/{slug}")
