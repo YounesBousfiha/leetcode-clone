@@ -4,38 +4,39 @@ import com.leetcode.judgeservice.domain.enums.ProgrammingLanguage;
 import org.springframework.stereotype.Component;
 
 @Component
-public class JavaStrategy implements ILanguagesStrategy{
+public class GoStrategy implements ILanguagesStrategy {
     @Override
     public ProgrammingLanguage getLanguage() {
-        return ProgrammingLanguage.JAVA;
+        return ProgrammingLanguage.GO;
     }
 
     @Override
     public String getDockerImage() {
-        return "openjdk:17-alpine";
+        return "golang:1.21-alpine";
     }
 
     @Override
     public String getFileExtension() {
-        return ".java";
+        return ".go";
     }
 
     @Override
     public String getRunCommand() {
-        return "/bin/sh -c \"javac Main.java && java Main\"";
+        return "go run main.go";
     }
 
     @Override
     public String wrapCode(String userCode) {
-        return "public class Main {\n" +
-                "    public static void main(String[] args) {\n" +
-                "        " + userCode + "\n" +
-                "    }\n" +
-                "}";
+        return "package main\n\n" +
+                "import (\n" +
+                "    \"fmt\"\n" +
+                ")\n\n" +
+                userCode;
     }
 
     @Override
     public String getFileName() {
-        return "Main" + getFileExtension();
+        return "main" + getFileExtension();
     }
 }
+
