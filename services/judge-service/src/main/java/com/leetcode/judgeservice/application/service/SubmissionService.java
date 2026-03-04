@@ -4,6 +4,7 @@ import com.leetcode.judgeservice.application.mapper.SubmissionMapper;
 import com.leetcode.judgeservice.domain.entity.Submission;
 import com.leetcode.judgeservice.domain.entity.SubmissionResult;
 import com.leetcode.judgeservice.domain.enums.SubmissionStatus;
+import com.leetcode.judgeservice.domain.exception.JudgeServiceException;
 import com.leetcode.judgeservice.infrastructure.client.dto.ProblemDetailResponse;
 import com.leetcode.judgeservice.infrastructure.client.dto.TestCaseDto;
 import com.leetcode.judgeservice.infrastructure.client.feign.ProblemFeignClient;
@@ -11,11 +12,15 @@ import com.leetcode.judgeservice.infrastructure.repository.SubmissionRepository;
 import com.leetcode.judgeservice.presentation.dto.SubmissionRequest;
 import com.leetcode.judgeservice.presentation.dto.SubmissionResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,5 +62,32 @@ public class SubmissionService {
         submission.setCompletedAt(LocalDateTime.now());
 
         return mapper.toResponse(repository.save(submission));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SubmissionResponse> getUserSubmissions(UUID userId, Pageable pageable) {
+        return repository.findByUserID(userId, pageable)
+                .map(mapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SubmissionResponse> getUserSubmissionsForProblem(UUID userId, String problemId) {
+        return repository.findByUserIDAndProblemId(userId, problemId)
+                .stream()
+                .map(mapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public SubmissionResponse getSubmissionById(UUID submissionId, UUID userId) {
+        Submission submission = repository.findById(submissionId)
+                .orElseThrow(() -> new JudgeServiceException("Submission not found: " + submissionId));
+
+        // Vérifier que la soumission appartient à l'utilisateur
+        if (!submission.getUserID().equals(userId)) {
+            throw new JudgeServiceException("Unauthorized access to submission");
+        }
+
+        return mapper.toResponse(submission);
     }
 }
