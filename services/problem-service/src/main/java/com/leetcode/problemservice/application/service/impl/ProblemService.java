@@ -6,6 +6,7 @@ import com.leetcode.problemservice.domain.entity.CodeTemplate;
 import com.leetcode.problemservice.domain.entity.Problem;
 import com.leetcode.problemservice.domain.entity.Tag;
 import com.leetcode.problemservice.domain.entity.TestCase;
+import com.leetcode.problemservice.domain.enums.Difficulty;
 import com.leetcode.problemservice.infrastcture.repository.ProblemRepository;
 import com.leetcode.problemservice.infrastcture.repository.TagRepository;
 import com.leetcode.problemservice.prensentation.dto.CreateProblemRequest;
@@ -15,10 +16,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 public class ProblemService implements IProblemService {
 
     private final ProblemRepository problemRepository;
-    private  final TagRepository tagRepository;
+    private final TagRepository tagRepository;
     private final ProblemMapper problemMapper;
 
     @Override
@@ -101,14 +102,12 @@ public class ProblemService implements IProblemService {
 
     @Override
     public void deleteProblem(String id) {
-
         UUID uuid = UUID.fromString(id);
         if(!problemRepository.existsById(uuid)) {
             throw new RuntimeException("Problem not found with Id: " + id);
         }
 
         problemRepository.deleteById(uuid);
-
         log.info("Problem deleted successfully with id: {}", id);
     }
 
@@ -118,5 +117,37 @@ public class ProblemService implements IProblemService {
                 .orElseThrow(() -> new RuntimeException("Problem not Found"));
 
         return problemMapper.toInternalResponse(problem);
+    }
+
+    @Override
+    public Page<ProblemListResponse> getProblemsByDifficulty(Difficulty difficulty, Pageable pageable) {
+        return problemRepository.findByDifficulty(difficulty, pageable)
+                .map(problemMapper::toListResponse);
+    }
+
+    @Override
+    public Page<ProblemListResponse> getProblemsByTags(List<String> tagSlugs, Pageable pageable) {
+        return problemRepository.findByTagSlugs(tagSlugs, pageable)
+                .map(problemMapper::toListResponse);
+    }
+
+    @Override
+    public Page<ProblemListResponse> searchProblems(String keyword, Pageable pageable) {
+        return problemRepository.searchByKeyword(keyword, pageable)
+                .map(problemMapper::toListResponse);
+    }
+
+    @Override
+    public Page<ProblemListResponse> filterProblems(Difficulty difficulty, List<String> tagSlugs, Pageable pageable) {
+        if (difficulty != null && tagSlugs != null && !tagSlugs.isEmpty()) {
+            return problemRepository.findByDifficultyAndTagSlugs(difficulty, tagSlugs, pageable)
+                    .map(problemMapper::toListResponse);
+        } else if (difficulty != null) {
+            return getProblemsByDifficulty(difficulty, pageable);
+        } else if (tagSlugs != null && !tagSlugs.isEmpty()) {
+            return getProblemsByTags(tagSlugs, pageable);
+        } else {
+            return getAllProblems(pageable);
+        }
     }
 }
