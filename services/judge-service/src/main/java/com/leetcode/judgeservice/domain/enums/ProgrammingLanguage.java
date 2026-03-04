@@ -2,5 +2,8 @@ package com.leetcode.judgeservice.domain.enums;
 
 public enum ProgrammingLanguage {
     JAVA,
-    PYTHON
+    PYTHON,
+    JAVASCRIPT,
+    CPP,
+    GO
 }
