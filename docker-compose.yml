@@ -1,0 +1,272 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: leetcode-postgres
+    environment:
+      POSTGRES_USER: leetcode
+      POSTGRES_PASSWORD: leetcode123
+      POSTGRES_DB: leetcode_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - leetcode-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leetcode"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: leetcode-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - leetcode-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: leetcode-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: leetcode
+      RABBITMQ_DEFAULT_PASS: leetcode123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - leetcode-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Eureka Server
+  eureka-server:
+    build:
+      context: ./infrastructure/eureka-server
+      dockerfile: ../Dockerfile
+    container_name: leetcode-eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - leetcode-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Config Server
+  config-server:
+    build:
+      context: ./infrastructure/config-server
+      dockerfile: ../Dockerfile
+    container_name: leetcode-config-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      GIT_USERNAME: ${GIT_USERNAME}
+      GIT_TOKEN: ${GIT_TOKEN}
+    ports:
+      - "8888:8888"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - leetcode-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./infrastructure/api-gateway
+      dockerfile: ../Dockerfile
+    container_name: leetcode-gateway
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_REDIS_HOST: redis
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - leetcode-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: ../../infrastructure/Dockerfile
+    container_name: leetcode-auth-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leetcode_db
+      SPRING_DATASOURCE_USERNAME: leetcode
+      SPRING_DATASOURCE_PASSWORD: leetcode123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: leetcode
+      SPRING_RABBITMQ_PASSWORD: leetcode123
+      SPRING_REDIS_HOST: redis
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - leetcode-network
+
+  # User Service
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: ../../infrastructure/Dockerfile
+    container_name: leetcode-user-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leetcode_db
+      SPRING_DATASOURCE_USERNAME: leetcode
+      SPRING_DATASOURCE_PASSWORD: leetcode123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: leetcode
+      SPRING_RABBITMQ_PASSWORD: leetcode123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - leetcode-network
+
+  # Problem Service
+  problem-service:
+    build:
+      context: ./services/problem-service
+      dockerfile: ../../infrastructure/Dockerfile
+    container_name: leetcode-problem-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leetcode_db
+      SPRING_DATASOURCE_USERNAME: leetcode
+      SPRING_DATASOURCE_PASSWORD: leetcode123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+    ports:
+      - "8086:8086"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - leetcode-network
+
+  # Judge Service
+  judge-service:
+    build:
+      context: ./services/judge-service
+      dockerfile: ../../infrastructure/Dockerfile
+    container_name: leetcode-judge-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leetcode_db
+      SPRING_DATASOURCE_USERNAME: leetcode
+      SPRING_DATASOURCE_PASSWORD: leetcode123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - leetcode-network
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: ../../infrastructure/Dockerfile
+    container_name: leetcode-notification-service
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: leetcode
+      SPRING_RABBITMQ_PASSWORD: leetcode123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_MAIL_HOST: ${MAIL_HOST}
+      SPRING_MAIL_PORT: ${MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - leetcode-network
+
+  # AI Assist Service
+  ai-assist-service:
+    build:
+      context: ./services/ai-assist-service
+      dockerfile: ../../infrastructure/Dockerfile
+    container_name: leetcode-ai-service
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_REDIS_HOST: redis
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "8084:8084"
+    depends_on:
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - leetcode-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  leetcode-network:
+    driver: bridge
+
