@@ -38,10 +38,15 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
         }
 
         // Check minute limit
+        Long minuteRequests = getCurrentCount(userId, RATE_LIMIT_MINUTE_PREFIX);
         if (!checkRateLimit(userId, RATE_LIMIT_MINUTE_PREFIX, requestsPerMinute, 1, TimeUnit.MINUTES)) {
             log.warn("Rate limit exceeded for user {} (per minute)", userId);
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
+            response.setHeader("X-RateLimit-Limit", String.valueOf(requestsPerMinute));
+            response.setHeader("X-RateLimit-Remaining", "0");
+            response.setHeader("X-RateLimit-Reset", String.valueOf(getResetTime(userId, RATE_LIMIT_MINUTE_PREFIX)));
+            response.setHeader("Retry-After", "60");
             response.getWriter().write(String.format(
                 "{\"error\":\"Rate limit exceeded\",\"message\":\"Maximum %d requests per minute allowed\",\"retryAfter\":60}",
                 requestsPerMinute
@@ -54,12 +59,21 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
             log.warn("Rate limit exceeded for user {} (per hour)", userId);
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
+            response.setHeader("X-RateLimit-Limit", String.valueOf(requestsPerHour));
+            response.setHeader("X-RateLimit-Remaining", "0");
+            response.setHeader("X-RateLimit-Reset", String.valueOf(getResetTime(userId, RATE_LIMIT_HOUR_PREFIX)));
+            response.setHeader("Retry-After", "3600");
             response.getWriter().write(String.format(
                 "{\"error\":\"Rate limit exceeded\",\"message\":\"Maximum %d requests per hour allowed\",\"retryAfter\":3600}",
                 requestsPerHour
             ));
             return false;
         }
+
+        // Add rate limit info headers on successful requests
+        long minuteRemaining = Math.max(0, requestsPerMinute - (minuteRequests != null ? minuteRequests + 1 : 1));
+        response.setHeader("X-RateLimit-Limit", String.valueOf(requestsPerMinute));
+        response.setHeader("X-RateLimit-Remaining", String.valueOf(minuteRemaining));
 
         return true;
     }
@@ -86,6 +100,35 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
         }
 
         return allowed;
+    }
+
+    private Long getCurrentCount(String userId, String prefix) {
+        String key = prefix + userId;
+        try {
+            Object value = redisTemplate.opsForValue().get(key);
+            if (value instanceof Number) {
+                return ((Number) value).longValue();
+            }
+            if (value instanceof String) {
+                return Long.parseLong((String) value);
+            }
+        } catch (Exception e) {
+            log.debug("Could not get current count for key {}", key);
+        }
+        return 0L;
+    }
+
+    private long getResetTime(String userId, String prefix) {
+        String key = prefix + userId;
+        try {
+            Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+            if (ttl != null && ttl > 0) {
+                return System.currentTimeMillis() / 1000 + ttl;
+            }
+        } catch (Exception e) {
+            log.debug("Could not get TTL for key {}", key);
+        }
+        return System.currentTimeMillis() / 1000 + 60;
     }
 
     private String extractUserId(HttpServletRequest request) {
