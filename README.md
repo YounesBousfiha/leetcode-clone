@@ -120,13 +120,16 @@ Exécution et évaluation du code.
 
 **Endpoints:**
 - `POST /api/submissions` - Soumettre code
+- `GET /api/submissions/me` - Mon historique paginé
+- `GET /api/submissions/me/problem/{id}` - Soumissions par problème
+- `GET /api/submissions/{id}` - Détails soumission
 
 **Langages supportés:**
 - ✅ Java
 - ✅ Python
-- 🔄 JavaScript (en cours)
-- 🔄 C++ (en cours)
-- 🔄 Go (en cours)
+- ✅ JavaScript
+- ✅ C++
+- ✅ Go
 
 #### 8. Notification Service
 Envoi d'emails asynchrone via RabbitMQ.
@@ -223,6 +226,35 @@ Utilisé pour:
 - `auth.exchange` → `notification.email.register.queue` (Emails vérification)
 - `auth.exchange` → `user.profile.queue` (Création profils)
 - Dead Letter Queue (DLQ) pour gestion erreurs
+
+### LLM Configuration (AI Assist Service)
+
+Le AI Assist Service supporte 3 providers LLM configurables.
+
+**Sélectionner un provider:**
+```properties
+# Dans services/ai-assist-service/src/main/resources/application.properties
+llm.provider=deepseek    # ou gemini ou openai
+```
+
+**Variables d'environnement requises:**
+```bash
+# DeepSeek (Recommandé - Gratuit)
+DEEPSEEK_API_KEY=sk-your-deepseek-key
+
+# Gemini (Alternative gratuite)
+GEMINI_API_KEY=AIzaSy-your-gemini-key
+
+# OpenAI (Payant)
+OPENAI_API_KEY=sk-your-openai-key
+```
+
+**Obtenir les API keys:**
+- DeepSeek: https://platform.deepseek.com (gratuit, 60 req/min)
+- Gemini: https://makersuite.google.com/app/apikey (gratuit)
+- OpenAI: https://platform.openai.com (payant, ~$0.002/1K tokens)
+
+**Documentation complète:** `services/ai-assist-service/README.md`
 
 ## 📚 API Documentation
 
