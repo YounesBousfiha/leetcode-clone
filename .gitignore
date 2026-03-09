@@ -1,1 +1,193 @@
+# ============================================================================
+# LeetCode Clone - .gitignore
+# ============================================================================
+
+# Environment Variables (SENSITIVE - Never commit!)
 .env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Vault Tokens and Secrets (CRITICAL SECURITY!)
+.vault-token
+vault-token.txt
+*.vault
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# IDE - Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# IDE - VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# IDE - NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Logs
+*.log
+logs/
+*.log.*
+log/
+
+# Temporary Files
+temp/
+tmp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test Coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Backup Files
+*.bak
+*.backup
+*~
+
+# Spring Boot
+spring-boot-*.jar
+!spring-boot-starter-*.jar
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Node.js (if frontend exists)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Python (if using Python for scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Compiled class files
+*.class
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# JUnit Test Reports
+test-output/
+junit/
+
+# Kubernetes Secrets (if applicable)
+*-secret.yaml
+*-secrets.yaml
+
+# Terraform (if using IaC)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Ansible (if using configuration management)
+*.retry
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+
+# Judge Service temporary code execution files
+services/judge-service/temp/
+services/judge-service/tmp/
+
+# User uploaded files (if any)
+uploads/
+user-content/
+
+# Generated documentation
+docs/generated/
+
+# PlantUML generated images
+*.png
+*.svg
+!docs/**/*.png
+!docs/**/*.svg
+
+# ============================================================================
+# SECURITY REMINDER
+# ============================================================================
+# NEVER COMMIT:
+# - API Keys (DeepSeek, Judge0, etc.)
+# - Database passwords
+# - JWT secrets
+# - Vault tokens
+# - Email credentials
+# - OAuth client secrets
+# ============================================================================
