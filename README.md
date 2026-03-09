@@ -144,10 +144,29 @@ Assistance IA pour les problèmes (en cours).
 - Java 21
 - Maven 3.8+
 - Docker & Docker Compose
+- HashiCorp Vault CLI
 - PostgreSQL 15 (ou via Docker)
 - Node.js 18+ (pour le frontend)
 
-### Installation
+### Installation Automatique (Recommandé)
+
+**Option rapide avec script automatisé** :
+
+```powershell
+# Windows PowerShell
+.\quick-start.ps1
+
+# Linux/macOS
+chmod +x quick-start.sh
+./quick-start.sh
+```
+
+Ce script effectue automatiquement :
+- ✅ Démarrage de PostgreSQL, Redis, RabbitMQ, Vault
+- ✅ Configuration complète de Vault avec tous les secrets
+- ✅ Validation de la configuration
+
+### Installation Manuelle
 
 1. **Cloner le repository**
 ```bash
@@ -156,22 +175,50 @@ cd leetcode-clone
 ```
 
 2. **Configurer les variables d'environnement**
-```bash
+```powershell
+# Copier le template
 cp .env.example .env
+
 # Éditer .env avec vos configurations
+# Puis définir le token Vault
+$env:VAULT_TOKEN = "myroot"  # Windows
+export VAULT_TOKEN="myroot"  # Linux/macOS
 ```
 
-3. **Démarrer l'infrastructure avec Docker Compose**
+3. **Démarrer l'infrastructure**
 ```bash
-docker-compose up -d postgres redis rabbitmq
+# Démarrer Postgres, Redis, RabbitMQ, Vault
+docker-compose up -d postgres redis rabbitmq vault
+
+# Attendre que les services soient prêts (~30 secondes)
+docker-compose ps
 ```
 
-4. **Compiler tous les microservices**
+4. **Configurer Vault (automatique)**
+```powershell
+# Windows
+.\vault-setup.ps1
+
+# Linux/macOS
+chmod +x vault-setup.sh
+./vault-setup.sh
+```
+
+5. **Vérifier la configuration Vault**
+```powershell
+# Windows
+.\vault-check.ps1
+
+# Ou manuellement
+vault kv get secret/auth-service
+```
+
+6. **Compiler tous les microservices**
 ```bash
 mvn clean install
 ```
 
-5. **Démarrer les services (ordre important)**
+7. **Démarrer les services (ordre important)**
 ```bash
 # 1. Eureka Server
 cd infrastructure/eureka-server
@@ -196,8 +243,19 @@ cd services/notification-service && mvn spring-boot:run
 ### Démarrage complet avec Docker
 
 ```bash
+# Démarrer toute l'infrastructure + microservices
 docker-compose up -d
 ```
+
+### 📚 Documentation Vault
+
+Pour plus de détails sur la configuration de Vault :
+- **VAULT-SCRIPTS-README.md** - Guide rapide des scripts
+- **VAULT-SETUP-GUIDE.md** - Documentation complète
+- **Scripts disponibles** :
+  - `vault-setup.ps1` / `vault-setup.sh` - Configuration automatique
+  - `vault-check.ps1` - Vérification de la configuration
+  - `quick-start.ps1` - Démarrage automatique complet
 
 ## ⚙️ Configuration
 
