@@ -1,0 +1,901 @@
+{
+  "info": {
+    "name": "LeetCode Clone - Complete API Collection",
+    "description": "Collection complète pour tester tous les endpoints de la plateforme LeetCode Clone",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "leetcode-clone-api-collection"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication Service",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"displayName\": \"Test User\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Inscription d'un nouvel utilisateur"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.accessToken);",
+                  "    pm.collectionVariables.set(\"refresh_token\", jsonData.refreshToken);",
+                  "    pm.collectionVariables.set(\"user_id\", jsonData.userId);",
+                  "    pm.test(\"Tokens saved\", function () {",
+                  "        pm.expect(jsonData.accessToken).to.exist;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Connexion utilisateur"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify?token=YOUR_VERIFICATION_TOKEN",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify"],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "YOUR_VERIFICATION_TOKEN"
+                }
+              ]
+            },
+            "description": "Vérification de l'email avec le token reçu par email"
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/forget-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forget-password"]
+            },
+            "description": "Demande de réinitialisation du mot de passe"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password?token=YOUR_RESET_TOKEN",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password"],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "YOUR_RESET_TOKEN"
+                }
+              ]
+            },
+            "description": "Réinitialisation du mot de passe avec le token reçu"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh-token"]
+            },
+            "description": "Renouvellement du token d'accès"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Déconnexion utilisateur"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Problem Service",
+      "item": [
+        {
+          "name": "Get All Problems",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/problems?page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "problems"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Liste paginée de tous les problèmes"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Problem by Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/problems/two-sum",
+              "host": ["{{base_url}}"],
+              "path": ["api", "problems", "two-sum"]
+            },
+            "description": "Détails d'un problème par son slug"
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Problems",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/problems/filter?difficulty=EASY&tags=array&tags=hash-table&page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "problems", "filter"],
+              "query": [
+                {
+                  "key": "difficulty",
+                  "value": "EASY",
+                  "description": "EASY, MEDIUM, HARD"
+                },
+                {
+                  "key": "tags",
+                  "value": "array"
+                },
+                {
+                  "key": "tags",
+                  "value": "hash-table"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Filtrer les problèmes par difficulté et/ou tags"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Problems",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/problems/search?keyword=sum&page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "problems", "search"],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "sum"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Recherche full-text dans les problèmes"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Problem (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Two Sum\",\n  \"description\": \"Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\",\n  \"difficulty\": \"EASY\",\n  \"timeLimit\": 1.0,\n  \"memoryLimit\": 256,\n  \"tags\": [\"array\", \"hash-table\"],\n  \"testCase\": [\n    {\n      \"input\": \"[2,7,11,15], 9\",\n      \"expectedOutput\": \"[0,1]\",\n      \"isHidden\": false\n    }\n  ],\n  \"codeTemplate\": [\n    {\n      \"language\": \"java\",\n      \"template\": \"class Solution {\\n    public int[] twoSum(int[] nums, int target) {\\n        \\n    }\\n}\"\n    }\n  ],\n  \"hints\": [\n    \"Use a hash map to store the complement of each number\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/problems",
+              "host": ["{{base_url}}"],
+              "path": ["api", "problems"]
+            },
+            "description": "Création d'un nouveau problème (Admin uniquement)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Problem (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/problems/PROBLEM_UUID",
+              "host": ["{{base_url}}"],
+              "path": ["api", "problems", "PROBLEM_UUID"]
+            },
+            "description": "Suppression d'un problème (Admin uniquement)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Judge Service",
+      "item": [
+        {
+          "name": "Submit Code",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"class Solution {\\n    public int[] twoSum(int[] nums, int target) {\\n        Map<Integer, Integer> map = new HashMap<>();\\n        for (int i = 0; i < nums.length; i++) {\\n            int complement = target - nums[i];\\n            if (map.containsKey(complement)) {\\n                return new int[] { map.get(complement), i };\\n            }\\n            map.put(nums[i], i);\\n        }\\n        return new int[0];\\n    }\\n}\",\n  \"language\": \"java\",\n  \"problemId\": \"PROBLEM_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/submissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "submissions"]
+            },
+            "description": "Soumission de code pour exécution"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Submissions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/submissions/me?page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "submissions", "me"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Liste des soumissions de l'utilisateur connecté"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Submissions for Problem",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/submissions/me/problem/PROBLEM_ID",
+              "host": ["{{base_url}}"],
+              "path": ["api", "submissions", "me", "problem", "PROBLEM_ID"]
+            },
+            "description": "Toutes les soumissions de l'utilisateur pour un problème spécifique"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Submission by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/submissions/SUBMISSION_UUID",
+              "host": ["{{base_url}}"],
+              "path": ["api", "submissions", "SUBMISSION_UUID"]
+            },
+            "description": "Détails d'une soumission spécifique"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Service",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "Profil de l'utilisateur connecté"
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Updated Name\",\n  \"bio\": \"Software Engineer passionate about algorithms\",\n  \"githubUrl\": \"https://github.com/username\",\n  \"linkedinUrl\": \"https://linkedin.com/in/username\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "Mise à jour du profil utilisateur"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/USER_ID",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "USER_ID"]
+            },
+            "description": "Profil public d'un utilisateur"
+          },
+          "response": []
+        },
+        {
+          "name": "Save Note",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"problemId\": \"PROBLEM_ID\",\n  \"content\": \"My personal notes about this problem...\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notes"]
+            },
+            "description": "Sauvegarder ou mettre à jour une note personnelle pour un problème"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Note for Problem",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notes/PROBLEM_ID",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notes", "PROBLEM_ID"]
+            },
+            "description": "Récupérer la note personnelle pour un problème"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Leaderboard Service",
+      "item": [
+        {
+          "name": "Get Global Leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard?page=0&size=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Classement global des utilisateurs"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard/statistics/USER_ID",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard", "statistics", "USER_ID"]
+            },
+            "description": "Statistiques détaillées d'un utilisateur"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard/statistics/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard", "statistics", "me"]
+            },
+            "description": "Statistiques de l'utilisateur connecté"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Assist Service",
+      "item": [
+        {
+          "name": "Get Hint",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"problemSlug\": \"two-sum\",\n  \"userCode\": \"class Solution {\\n    public int[] twoSum(int[] nums, int target) {\\n        // Need help here\\n    }\\n}\",\n  \"language\": \"java\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai-assist/hint",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-assist", "hint"]
+            },
+            "description": "Obtenir une aide contextuelle de l'IA"
+          },
+          "response": []
+        },
+        {
+          "name": "Explain Problem",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ai-assist/explain/two-sum",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-assist", "explain", "two-sum"]
+            },
+            "description": "Explication détaillée d'un problème par l'IA"
+          },
+          "response": []
+        },
+        {
+          "name": "Review Code",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"class Solution {\\n    public int[] twoSum(int[] nums, int target) {\\n        for(int i=0; i<nums.length; i++) {\\n            for(int j=i+1; j<nums.length; j++) {\\n                if(nums[i] + nums[j] == target) {\\n                    return new int[]{i, j};\\n                }\\n            }\\n        }\\n        return new int[0];\\n    }\\n}\",\n  \"language\": \"java\",\n  \"problemSlug\": \"two-sum\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai-assist/review",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-assist", "review"]
+            },
+            "description": "Revue de code par l'IA avec suggestions d'amélioration"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Vérifier l'état de l'API Gateway"
+          },
+          "response": []
+        },
+        {
+          "name": "Eureka Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8761/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8761",
+              "path": [""]
+            },
+            "description": "Dashboard Eureka pour voir les services enregistrés"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+
