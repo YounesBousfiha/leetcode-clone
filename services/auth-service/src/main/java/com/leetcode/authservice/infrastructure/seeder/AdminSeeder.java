@@ -8,12 +8,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Profile({"dev", "local"})
 public class AdminSeeder implements CommandLineRunner {
 
 
@@ -44,8 +49,47 @@ public class AdminSeeder implements CommandLineRunner {
 
 
             this.userRepository.save(rootAdmin);
-            log.info("Root Admin Account seeded");
+            log.info("✅ Root Admin Account seeded");
+        } else {
+            log.info("✅ Root Admin Already in the Database");
         }
-        log.info("Root Admin Already in the Database");
+
+        // Seed test users
+        seedTestUsers();
+    }
+
+    private void seedTestUsers() {
+        List<User> testUsers = new ArrayList<>();
+
+        String[][] users = {
+            {"john.doe@example.com", "John Doe"},
+            {"jane.smith@example.com", "Jane Smith"},
+            {"alice.wonder@example.com", "Alice Wonder"},
+            {"bob.builder@example.com", "Bob Builder"},
+            {"charlie.brown@example.com", "Charlie Brown"}
+        };
+
+        for (String[] userData : users) {
+            String userEmail = userData[0];
+            String displayName = userData[1];
+
+            if (!userRepository.existsByEmail(userEmail)) {
+                User testUser = User.builder()
+                        .email(userEmail)
+                        .displayName(displayName)
+                        .password(passwordEncoder.encode("password123"))
+                        .role(Role.USER)
+                        .verified(true)
+                        .build();
+                testUsers.add(testUser);
+            }
+        }
+
+        if (!testUsers.isEmpty()) {
+            userRepository.saveAll(testUsers);
+            log.info("✅ Seeded {} test users", testUsers.size());
+        } else {
+            log.info("✅ Test users already exist");
+        }
     }
 }
