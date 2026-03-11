@@ -22,7 +22,7 @@ public class CodeTemplate {
     @Column(nullable = false)
     private String language;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(name = "boilerplate_code", columnDefinition = "TEXT", nullable = false)
     private String codeBoilerplate;
 
     @ManyToOne(fetch = FetchType.LAZY)
