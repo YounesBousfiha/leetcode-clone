@@ -287,30 +287,31 @@ Utilisé pour:
 
 ### LLM Configuration (AI Assist Service)
 
-Le AI Assist Service supporte 3 providers LLM configurables.
+Le AI Assist Service utilise **DeepSeek** comme provider LLM.
 
-**Sélectionner un provider:**
+**Configuration requise:**
 ```properties
 # Dans services/ai-assist-service/src/main/resources/application.properties
-llm.provider=deepseek    # ou gemini ou openai
+deepseek.api.key=${DEEPSEEK_API_KEY:}
+deepseek.api.url=https://api.deepseek.com
+deepseek.model=deepseek-chat
 ```
 
-**Variables d'environnement requises:**
+**Variables d'environnement:**
 ```bash
-# DeepSeek (Recommandé - Gratuit)
+# DeepSeek (Gratuit)
 DEEPSEEK_API_KEY=sk-your-deepseek-key
-
-# Gemini (Alternative gratuite)
-GEMINI_API_KEY=AIzaSy-your-gemini-key
-
-# OpenAI (Payant)
-OPENAI_API_KEY=sk-your-openai-key
 ```
 
-**Obtenir les API keys:**
-- DeepSeek: https://platform.deepseek.com (gratuit, 60 req/min)
-- Gemini: https://makersuite.google.com/app/apikey (gratuit)
-- OpenAI: https://platform.openai.com (payant, ~$0.002/1K tokens)
+**Obtenir une clé API DeepSeek:**
+1. Créer un compte sur https://platform.deepseek.com
+2. Générer une API key dans "API Keys"
+3. Copier la clé (format : `sk-...`)
+
+**Avantages DeepSeek :**
+- ✅ Gratuit (60 requêtes/minute)
+- ✅ API compatible OpenAI (drop-in replacement)
+- ✅ Performant (comparable à GPT-3.5)
 
 **Documentation complète:** `services/ai-assist-service/README.md`
 
