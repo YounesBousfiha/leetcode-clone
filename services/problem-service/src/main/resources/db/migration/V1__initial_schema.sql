@@ -72,22 +72,4 @@ CREATE TABLE IF NOT EXISTS problem_hints (
     CONSTRAINT fk_problem_hints_problem FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE
 );
 
--- Insert sample tags
-INSERT INTO tags (id, name, slug) VALUES
-    (gen_random_uuid(), 'Array', 'array'),
-    (gen_random_uuid(), 'String', 'string'),
-    (gen_random_uuid(), 'Hash Table', 'hash-table'),
-    (gen_random_uuid(), 'Dynamic Programming', 'dynamic-programming'),
-    (gen_random_uuid(), 'Math', 'math'),
-    (gen_random_uuid(), 'Sorting', 'sorting'),
-    (gen_random_uuid(), 'Greedy', 'greedy'),
-    (gen_random_uuid(), 'Depth-First Search', 'depth-first-search'),
-    (gen_random_uuid(), 'Binary Search', 'binary-search'),
-    (gen_random_uuid(), 'Tree', 'tree'),
-    (gen_random_uuid(), 'Breadth-First Search', 'breadth-first-search'),
-    (gen_random_uuid(), 'Two Pointers', 'two-pointers'),
-    (gen_random_uuid(), 'Linked List', 'linked-list'),
-    (gen_random_uuid(), 'Stack', 'stack'),
-    (gen_random_uuid(), 'Recursion', 'recursion')
-ON CONFLICT (slug) DO NOTHING;
 
