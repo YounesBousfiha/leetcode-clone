@@ -25,7 +25,7 @@ public class Submission {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private UUID userID;
 
     @Column(nullable = false)
@@ -50,6 +50,7 @@ public class Submission {
     private LocalDateTime completedAt;
 
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<SubmissionResult> resultList = new ArrayList<>();
 
     public void addResult(SubmissionResult result) {
