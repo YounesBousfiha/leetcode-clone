@@ -24,7 +24,7 @@ public interface SubmissionMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", constant = "PENDING")
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "userId" ,ignore = true)
-    @Mapping(target = "language", expression = "java(com.leetcode.judgeservice.domain.enums.ProgrammingLanguage)")
+    @Mapping(target = "userID" ,ignore = true)
+    @Mapping(target = "language", expression = "java(com.leetcode.judgeservice.domain.enums.ProgrammingLanguage.JAVA)")
     Submission toEntity(SubmissionRequest request);
 }
