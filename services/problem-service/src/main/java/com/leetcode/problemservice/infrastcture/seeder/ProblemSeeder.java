@@ -64,14 +64,26 @@ public class ProblemSeeder implements CommandLineRunner {
         };
 
         for (String[] data : tagData) {
-            Tag tag = Tag.builder()
-                    .name(data[0])
-                    .slug(data[1])
-                    .build();
-            tagMap.put(data[1], tagRepository.save(tag));
+            // Check if tag already exists
+            Optional<Tag> existingTag = tagRepository.findByName(data[0]);
+            Tag tag;
+            
+            if (existingTag.isPresent()) {
+                tag = existingTag.get();
+                log.debug("Tag '{}' already exists", data[0]);
+            } else {
+                tag = Tag.builder()
+                        .name(data[0])
+                        .slug(data[1])
+                        .build();
+                tag = tagRepository.save(tag);
+                log.debug("Created new tag '{}'", data[0]);
+            }
+            
+            tagMap.put(data[1], tag);
         }
 
-        log.info("✅ Seeded {} tags", tagMap.size());
+        log.info("✅ Tags initialization completed, total tags: {}", tagMap.size());
         return tagMap;
     }
 
