@@ -41,7 +41,6 @@ public class SubmissionSeeder implements CommandLineRunner {
     private void seedSubmissions() {
         List<Submission> submissions = new ArrayList<>();
 
-        // Sample user IDs (these should match the user IDs from auth-service in production)
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
         UUID user3 = UUID.randomUUID();
