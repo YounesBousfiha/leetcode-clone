@@ -4,6 +4,7 @@ package com.leetcode.problemservice.prensentation.controller;
 import com.leetcode.problemservice.application.service.IProblemService;
 import com.leetcode.problemservice.domain.enums.Difficulty;
 import com.leetcode.problemservice.prensentation.dto.CreateProblemRequest;
+import com.leetcode.problemservice.prensentation.dto.InternalProblemResponse;
 import com.leetcode.problemservice.prensentation.dto.ProblemDetailResponse;
 import com.leetcode.problemservice.prensentation.dto.ProblemListResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -99,7 +100,7 @@ public class ProblemController {
     @GetMapping("/internal/{slug}")
     @Operation(summary = "Get problem for judge (internal)", description = "Internal endpoint used by Judge Service via Feign")
     @ApiResponse(responseCode = "200", description = "Problem retrieved for judging")
-    public ResponseEntity<ProblemDetailResponse> getProblemForJudge(
+    public ResponseEntity<InternalProblemResponse> getProblemForJudge(
             @Parameter(description = "Problem slug") @PathVariable("slug") String slug) {
         return ResponseEntity.ok(problemService.getProblemForJudge(slug));
     }
