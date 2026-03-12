@@ -10,6 +10,8 @@ import com.leetcode.problemservice.domain.enums.Difficulty;
 import com.leetcode.problemservice.infrastcture.repository.ProblemRepository;
 import com.leetcode.problemservice.infrastcture.repository.TagRepository;
 import com.leetcode.problemservice.prensentation.dto.CreateProblemRequest;
+import com.leetcode.problemservice.prensentation.dto.CreateProblemRequest;
+import com.leetcode.problemservice.prensentation.dto.InternalProblemResponse;
 import com.leetcode.problemservice.prensentation.dto.ProblemDetailResponse;
 import com.leetcode.problemservice.prensentation.dto.ProblemListResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -112,8 +114,9 @@ public class ProblemService implements IProblemService {
     }
 
     @Override
-    public ProblemDetailResponse getProblemForJudge(@PathVariable("slug") String slug) {
-        Problem problem = problemRepository.findBySlug(slug)
+    @Transactional(readOnly = true)
+    public InternalProblemResponse getProblemForJudge(String slug) {
+        Problem problem = problemRepository.findBySlugWithTestCases(slug)
                 .orElseThrow(() -> new RuntimeException("Problem not Found"));
 
         return problemMapper.toInternalResponse(problem);
