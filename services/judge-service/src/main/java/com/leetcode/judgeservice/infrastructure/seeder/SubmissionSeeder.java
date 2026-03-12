@@ -45,11 +45,11 @@ public class SubmissionSeeder implements CommandLineRunner {
         UUID user2 = UUID.randomUUID();
         UUID user3 = UUID.randomUUID();
 
-        // Sample problem slugs/IDs
-        String[] problemIds = {"two-sum", "add-two-numbers", "valid-parentheses", "palindrome-number"};
+        // Sample problem slugs
+        String[] problemSlugs = {"two-sum", "add-two-numbers", "valid-parentheses", "palindrome-number"};
 
         // Accepted submission - Two Sum in Java
-        submissions.add(createSubmission(user1, problemIds[0], ProgrammingLanguage.JAVA,
+        submissions.add(createSubmission(user1, problemSlugs[0], ProgrammingLanguage.JAVA,
                 SubmissionStatus.ACCEPTED,
                 "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n" +
                 "        Map<Integer, Integer> map = new HashMap<>();\n" +
@@ -65,7 +65,7 @@ public class SubmissionSeeder implements CommandLineRunner {
                 45.5, 42000L, 3, 3));
 
         // Accepted submission - Valid Parentheses in Python
-        submissions.add(createSubmission(user2, problemIds[2], ProgrammingLanguage.PYTHON,
+        submissions.add(createSubmission(user2, problemSlugs[2], ProgrammingLanguage.PYTHON,
                 SubmissionStatus.ACCEPTED,
                 "class Solution:\n    def isValid(self, s: str) -> bool:\n" +
                 "        stack = []\n" +
@@ -81,7 +81,7 @@ public class SubmissionSeeder implements CommandLineRunner {
                 32.0, 38000L, 4, 4));
 
         // Wrong Answer submission - Two Sum in JavaScript
-        submissions.add(createSubmission(user3, problemIds[0], ProgrammingLanguage.JAVASCRIPT,
+        submissions.add(createSubmission(user3, problemSlugs[0], ProgrammingLanguage.JAVASCRIPT,
                 SubmissionStatus.WRONG_ANSWER,
                 "var twoSum = function(nums, target) {\n" +
                 "    for (let i = 0; i < nums.length; i++) {\n" +
@@ -96,7 +96,7 @@ public class SubmissionSeeder implements CommandLineRunner {
                 25.0, 35000L, 3, 1));
 
         // Time Limit Exceeded submission - Add Two Numbers in Java
-        submissions.add(createSubmission(user1, problemIds[1], ProgrammingLanguage.JAVA,
+        submissions.add(createSubmission(user1, problemSlugs[1], ProgrammingLanguage.JAVA,
                 SubmissionStatus.TIME_LIMIT_EXCEEDED,
                 "class Solution {\n    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {\n" +
                 "        // Inefficient implementation that causes TLE\n" +
@@ -107,7 +107,7 @@ public class SubmissionSeeder implements CommandLineRunner {
                 1500.0, 50000L, 5, 0));
 
         // Runtime Error submission - Palindrome Number in Python
-        submissions.add(createSubmission(user2, problemIds[3], ProgrammingLanguage.PYTHON,
+        submissions.add(createSubmission(user2, problemSlugs[3], ProgrammingLanguage.PYTHON,
                 SubmissionStatus.RUNTIME_ERROR,
                 "class Solution:\n    def isPalindrome(self, x: int) -> bool:\n" +
                 "        s = str(x)\n" +
@@ -115,7 +115,7 @@ public class SubmissionSeeder implements CommandLineRunner {
                 0.0, 0L, 3, 0));
 
         // Accepted submission - Palindrome Number in C++
-        submissions.add(createSubmission(user3, problemIds[3], ProgrammingLanguage.CPP,
+        submissions.add(createSubmission(user3, problemSlugs[3], ProgrammingLanguage.CPP,
                 SubmissionStatus.ACCEPTED,
                 "class Solution {\npublic:\n    bool isPalindrome(int x) {\n" +
                 "        if (x < 0) return false;\n" +
@@ -129,7 +129,7 @@ public class SubmissionSeeder implements CommandLineRunner {
                 38.0, 40000L, 3, 3));
 
         // Compilation Error submission - Two Sum in Java
-        submissions.add(createSubmission(user1, problemIds[0], ProgrammingLanguage.JAVA,
+        submissions.add(createSubmission(user1, problemSlugs[0], ProgrammingLanguage.JAVA,
                 SubmissionStatus.COMPILATION_ERROR,
                 "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n" +
                 "        Map<Integer, Integer> map = new HashMap<>(\n" + // Missing closing parenthesis
@@ -137,7 +137,7 @@ public class SubmissionSeeder implements CommandLineRunner {
                 0.0, 0L, 0, 0));
 
         // Accepted submission - Valid Parentheses in Go
-        submissions.add(createSubmission(user2, problemIds[2], ProgrammingLanguage.GO,
+        submissions.add(createSubmission(user2, problemSlugs[2], ProgrammingLanguage.GO,
                 SubmissionStatus.ACCEPTED,
                 "func isValid(s string) bool {\n" +
                 "    stack := []rune{}\n" +
@@ -159,7 +159,7 @@ public class SubmissionSeeder implements CommandLineRunner {
         log.info("✅ Seeded {} submissions", submissions.size());
     }
 
-    private Submission createSubmission(UUID userId, String problemId, ProgrammingLanguage language,
+    private Submission createSubmission(UUID userId, String problemSlug, ProgrammingLanguage language,
                                        SubmissionStatus status, String code,
                                        double executionTime, long memoryUsed,
                                        int totalTestCases, int passedTestCases) {
@@ -167,7 +167,7 @@ public class SubmissionSeeder implements CommandLineRunner {
 
         Submission submission = Submission.builder()
                 .userID(userId)
-                .problemId(problemId)
+                .problemSlug(problemSlug)
                 .language(language)
                 .status(status)
                 .code(code)
