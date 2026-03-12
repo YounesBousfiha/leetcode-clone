@@ -52,14 +52,14 @@ public class SubmissionController {
         return ResponseEntity.ok(submissionService.getUserSubmissions(UUID.fromString(userId), pageable));
     }
 
-    @GetMapping("/me/problem/{problemId}")
+    @GetMapping("/me/problem/{problemSlug}")
     @Operation(summary = "Get submissions for problem", description = "Get all user submissions for a specific problem")
     @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully")
     public ResponseEntity<List<SubmissionResponse>> getMySubmissionsForProblem(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") String userId,
-            @Parameter(description = "Problem ID") @PathVariable String problemId
+            @Parameter(description = "Problem slug") @PathVariable String problemSlug
     ) {
-        return ResponseEntity.ok(submissionService.getUserSubmissionsForProblem(UUID.fromString(userId), problemId));
+        return ResponseEntity.ok(submissionService.getUserSubmissionsForProblem(UUID.fromString(userId), problemSlug));
     }
 
     @GetMapping("/{submissionId}")
