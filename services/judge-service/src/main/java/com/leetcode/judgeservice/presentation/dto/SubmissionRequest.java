@@ -11,6 +11,6 @@ public record SubmissionRequest(
         @NotBlank(message = "Language is required")
         String language,
 
-        @NotBlank(message = "problem ID is required")
-        String problemId) {
+        @NotBlank(message = "Problem slug is required")
+        String problemSlug) {
 }
