@@ -28,8 +28,8 @@ public class Submission {
     @Column(name = "user_id", nullable = false)
     private UUID userID;
 
-    @Column(nullable = false)
-    private String problemId;
+    @Column(name = "problem_slug", nullable = false)
+    private String problemSlug;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String code;
