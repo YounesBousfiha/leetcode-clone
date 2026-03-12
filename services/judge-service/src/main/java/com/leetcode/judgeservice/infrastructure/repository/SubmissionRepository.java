@@ -13,7 +13,7 @@ import java.util.UUID;
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, UUID> {
 
-    List<Submission> findByUserIDAndProblemId(UUID userId, String problemId);
+    List<Submission> findByUserIDAndProblemSlug(UUID userId, String problemSlug);
 
     List<Submission> findByUserID(UUID userId);
 
