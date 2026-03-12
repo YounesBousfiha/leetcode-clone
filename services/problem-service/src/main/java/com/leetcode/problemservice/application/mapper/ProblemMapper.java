@@ -6,6 +6,7 @@ import com.leetcode.problemservice.domain.entity.Problem;
 import com.leetcode.problemservice.domain.entity.Tag;
 import com.leetcode.problemservice.domain.entity.TestCase;
 import com.leetcode.problemservice.prensentation.dto.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -50,9 +51,27 @@ public interface ProblemMapper {
 
     TagDto toTagDto(Tag tag);
 
-
-    @Mapping(target = "examples", source = "testCases")
-    @Mapping(target = "templates", source = "codeTemplates")
-    ProblemDetailResponse toInternalResponse(Problem problem);
+    /**
+     * Maps Problem entity to InternalProblemResponse for judge-service.
+     * Includes ALL test cases (not just public ones) for code execution.
+     */
+    default InternalProblemResponse toInternalResponse(Problem problem) {
+        if (problem == null) {
+            return null;
+        }
+        List<TestCaseDto> testCaseDtos = problem.getTestCases() == null 
+            ? new ArrayList<>() 
+            : problem.getTestCases().stream()
+                .map(this::toTestCaseDto)
+                .toList();
+        
+        return new InternalProblemResponse(
+            problem.getId().toString(),
+            problem.getSlug(),
+            problem.getTimeLimit(),
+            problem.getMemoryLimit(),
+            testCaseDtos
+        );
+    }
 
 }

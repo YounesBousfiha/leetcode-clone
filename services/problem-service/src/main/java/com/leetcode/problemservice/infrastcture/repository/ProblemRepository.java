@@ -18,6 +18,9 @@ public interface ProblemRepository extends JpaRepository<Problem, UUID> {
 
     Optional<Problem> findBySlug(String slug);
 
+    @Query("SELECT p FROM Problem p LEFT JOIN FETCH p.testCases WHERE p.slug = :slug")
+    Optional<Problem> findBySlugWithTestCases(@Param("slug") String slug);
+
     boolean existsBySlug(String slug);
 
     Page<Problem> findByDifficulty(Difficulty difficulty, Pageable pageable);
