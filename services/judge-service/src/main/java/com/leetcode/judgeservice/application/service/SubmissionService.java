@@ -38,11 +38,16 @@ public class SubmissionService {
         submission = repository.save(submission);
 
 
-        ProblemDetailResponse problem = problemFeignClient.getProblem(request.problemId());
+        ProblemDetailResponse problem = problemFeignClient.getProblem(request.problemSlug());
+
+        List<TestCaseDto> testCases = problem.testCases();
+        if (testCases == null || testCases.isEmpty()) {
+            throw new JudgeServiceException("No test cases found for problem: " + request.problemSlug());
+        }
 
         boolean allPassed = true;
 
-        for(TestCaseDto testCase : problem.testCases()) {
+        for(TestCaseDto testCase : testCases) {
 
             SubmissionResult result = engine.executeCode(
                     request.code(),
@@ -71,8 +76,8 @@ public class SubmissionService {
     }
 
     @Transactional(readOnly = true)
-    public List<SubmissionResponse> getUserSubmissionsForProblem(UUID userId, String problemId) {
-        return repository.findByUserIDAndProblemId(userId, problemId)
+    public List<SubmissionResponse> getUserSubmissionsForProblem(UUID userId, String problemSlug) {
+        return repository.findByUserIDAndProblemSlug(userId, problemSlug)
                 .stream()
                 .map(mapper::toResponse)
                 .collect(Collectors.toList());
