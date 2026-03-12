@@ -2,6 +2,8 @@ package com.leetcode.problemservice.application.service;
 
 import com.leetcode.problemservice.domain.enums.Difficulty;
 import com.leetcode.problemservice.prensentation.dto.CreateProblemRequest;
+import com.leetcode.problemservice.prensentation.dto.InternalProblemResponse;
+import com.leetcode.problemservice.prensentation.dto.ProblemDetailResponse;
 import com.leetcode.problemservice.prensentation.dto.ProblemDetailResponse;
 import com.leetcode.problemservice.prensentation.dto.ProblemListResponse;
 import org.springframework.data.domain.Page;
@@ -18,7 +20,7 @@ public interface IProblemService {
 
     void deleteProblem(String id);
 
-    ProblemDetailResponse getProblemForJudge(String slug);
+    InternalProblemResponse getProblemForJudge(String slug);
 
     Page<ProblemListResponse> getProblemsByDifficulty(Difficulty difficulty, Pageable pageable);
 
