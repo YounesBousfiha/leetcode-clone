@@ -217,14 +217,13 @@ class ProblemServiceTest {
     @DisplayName("getProblemForJudge - should return problem for internal use")
     void getProblemForJudge_shouldReturnProblem() {
         Problem problem = Problem.builder().id(UUID.randomUUID()).title("Two Sum").slug("two-sum").build();
-        ProblemDetailResponse response = new ProblemDetailResponse(
-                problem.getId().toString(), "Two Sum", "two-sum", "desc",
-                Difficulty.EASY, 2.0, 256, Set.of(), List.of(), List.of(), List.of());
+        InternalProblemResponse response = new InternalProblemResponse(
+                problem.getId().toString(), "two-sum", 2.0, 256, List.of());
 
-        when(problemRepository.findBySlug("two-sum")).thenReturn(Optional.of(problem));
+        when(problemRepository.findBySlugWithTestCases("two-sum")).thenReturn(Optional.of(problem));
         when(problemMapper.toInternalResponse(problem)).thenReturn(response);
 
-        ProblemDetailResponse result = problemService.getProblemForJudge("two-sum");
+        InternalProblemResponse result = problemService.getProblemForJudge("two-sum");
 
         assertThat(result.slug()).isEqualTo("two-sum");
         verify(problemMapper).toInternalResponse(problem);

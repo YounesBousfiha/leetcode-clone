@@ -57,9 +57,9 @@ class SubmissionServiceTest {
     @DisplayName("submit - should execute code and return ACCEPTED when all tests pass")
     void submit_shouldReturnAccepted() {
         SubmissionRequest request = SubmissionRequest.builder()
-                .code("print('hello')").language("PYTHON").problemId("two-sum").build();
+                .code("print('hello')").language("PYTHON").problemSlug("two-sum").build();
         Submission submission = Submission.builder()
-                .id(UUID.randomUUID()).userID(userId).problemId("two-sum")
+                .id(UUID.randomUUID()).userID(userId).problemSlug("two-sum")
                 .code("print('hello')").language(ProgrammingLanguage.PYTHON)
                 .status(SubmissionStatus.PENDING).build();
         ProblemDetailResponse problem = new ProblemDetailResponse(
@@ -86,9 +86,9 @@ class SubmissionServiceTest {
     @DisplayName("submit - should return WRONG_ANSWER when test fails")
     void submit_shouldReturnWrongAnswer() {
         SubmissionRequest request = SubmissionRequest.builder()
-                .code("code").language("JAVA").problemId("two-sum").build();
+                .code("code").language("JAVA").problemSlug("two-sum").build();
         Submission submission = Submission.builder()
-                .id(UUID.randomUUID()).userID(userId).problemId("two-sum")
+                .id(UUID.randomUUID()).userID(userId).problemSlug("two-sum")
                 .code("code").language(ProgrammingLanguage.JAVA)
                 .status(SubmissionStatus.PENDING).build();
         ProblemDetailResponse problem = new ProblemDetailResponse(
@@ -133,12 +133,12 @@ class SubmissionServiceTest {
     @DisplayName("getUserSubmissionsForProblem - should return submissions for specific problem")
     void getUserSubmissionsForProblem_shouldReturnForProblem() {
         Submission submission = Submission.builder()
-                .id(UUID.randomUUID()).userID(userId).problemId("two-sum")
+                .id(UUID.randomUUID()).userID(userId).problemSlug("two-sum")
                 .status(SubmissionStatus.ACCEPTED).build();
         SubmissionResponse response = SubmissionResponse.builder()
                 .id(submission.getId()).status("ACCEPTED").build();
 
-        when(repository.findByUserIDAndProblemId(userId, "two-sum")).thenReturn(List.of(submission));
+        when(repository.findByUserIDAndProblemSlug(userId, "two-sum")).thenReturn(List.of(submission));
         when(mapper.toResponse(submission)).thenReturn(response);
 
         List<SubmissionResponse> result = submissionService.getUserSubmissionsForProblem(userId, "two-sum");
