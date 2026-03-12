@@ -12,7 +12,7 @@ public class JavaStrategy implements ILanguagesStrategy{
 
     @Override
     public String getDockerImage() {
-        return "openjdk:17-alpine";
+        return "eclipse-temurin:21-jdk-jammy";
     }
 
     @Override
