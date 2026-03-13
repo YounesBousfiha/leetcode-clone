@@ -1,7 +1,6 @@
 package com.leetcode.judgeservice.infrastructure.execution;
 
 import com.leetcode.judgeservice.domain.entity.SubmissionResult;
-import com.leetcode.judgeservice.domain.enums.ProgrammingLanguage;
 import com.leetcode.judgeservice.domain.exception.CodeExecutionException;
 import com.leetcode.judgeservice.infrastructure.execution.strategy.ILanguagesStrategy;
 import com.leetcode.judgeservice.infrastructure.execution.strategy.PythonStrategy;
@@ -21,11 +20,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class DockerExecutionEngineTest {
 
     private DockerExecutionEngine executionEngine;
-    private List<ILanguagesStrategy> strategies;
 
     @BeforeEach
     void setUp() {
-        strategies = List.of(
+        List<ILanguagesStrategy> strategies = List.of(
                 new PythonStrategy()
                 // Add other strategies as needed for comprehensive testing
         );
@@ -48,6 +46,7 @@ class DockerExecutionEngineTest {
         assertThat(result).isNotNull();
         assertThat(result.isPassed()).isTrue();
         assertThat(result.getOutput()).isEqualTo(expectedOutput);
+        assertThat(result.getExpectedOutput()).isEqualTo(expectedOutput);
         assertThat(result.getExecutionTime()).isGreaterThan(0.0);
     }
 
@@ -205,6 +204,25 @@ class DockerExecutionEngineTest {
         assertThat(result).isNotNull();
         assertThat(result.isPassed()).isTrue();
         assertThat(result.getOutput()).isEqualTo(expectedOutput);
+    }
+
+    @Test
+    @DisplayName("Should treat bracketed outputs with spacing differences as equal")
+    void shouldTreatBracketedOutputsWithSpacingDifferencesAsEqual() {
+        // Given
+        String userCode = "print([0, 1])";
+        String language = "python";
+        String input = "";
+        String expectedOutput = "[0,1]";
+
+        // When
+        SubmissionResult result = executionEngine.executeCode(userCode, language, input, expectedOutput);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.isPassed()).isTrue();
+        assertThat(result.getOutput()).isEqualTo("[0, 1]");
+        assertThat(result.getExpectedOutput()).isEqualTo(expectedOutput);
     }
 }
 
