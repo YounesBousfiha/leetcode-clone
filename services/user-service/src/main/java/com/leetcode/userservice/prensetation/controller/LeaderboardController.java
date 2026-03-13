@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class LeaderboardController {
     @Operation(summary = "Get global leaderboard", description = "Get paginated global leaderboard sorted by score")
     @ApiResponse(responseCode = "200", description = "Leaderboard retrieved successfully")
     public ResponseEntity<Page<LeaderboardResponse>> getGlobalLeaderboard(
-            @PageableDefault(size = 50, sort = "score") Pageable pageable
+            @PageableDefault(size = 50, sort = "score", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(leaderboardService.getGlobalLeaderboard(pageable));
     }
@@ -42,7 +43,7 @@ public class LeaderboardController {
         @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<UserStatisticsResponse> getUserStatistics(
-            @Parameter(description = "User ID") @PathVariable String userId
+            @Parameter(description = "User ID") @PathVariable("userId") String userId
     ) {
         return ResponseEntity.ok(leaderboardService.getUserStatistics(userId));
     }
@@ -64,4 +65,3 @@ public class LeaderboardController {
         return ResponseEntity.noContent().build();
     }
 }
-
