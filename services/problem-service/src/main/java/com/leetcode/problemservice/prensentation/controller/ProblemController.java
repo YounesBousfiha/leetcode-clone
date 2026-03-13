@@ -56,8 +56,8 @@ public class ProblemController {
     @Operation(summary = "Filter problems", description = "Filter problems by difficulty and/or tags")
     @ApiResponse(responseCode = "200", description = "Filtered problems retrieved")
     public ResponseEntity<Page<ProblemListResponse>> filterProblems(
-            @Parameter(description = "Difficulty level") @RequestParam(required = false) Difficulty difficulty,
-            @Parameter(description = "Tag slugs") @RequestParam(required = false) List<String> tags,
+            @Parameter(description = "Difficulty level") @RequestParam(name = "difficulty", required = false) Difficulty difficulty,
+            @Parameter(description = "Tag slugs") @RequestParam(name = "tags", required = false) List<String> tags,
             @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseEntity.ok(problemService.filterProblems(difficulty, tags, pageable));
@@ -67,7 +67,7 @@ public class ProblemController {
     @Operation(summary = "Search problems", description = "Full-text search problems by title or description")
     @ApiResponse(responseCode = "200", description = "Search results retrieved")
     public ResponseEntity<Page<ProblemListResponse>> searchProblems(
-            @Parameter(description = "Search keyword") @RequestParam String keyword,
+            @Parameter(description = "Search keyword") @RequestParam("keyword") String keyword,
             @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseEntity.ok(problemService.searchProblems(keyword, pageable));
@@ -92,7 +92,7 @@ public class ProblemController {
         @ApiResponse(responseCode = "204", description = "Problem deleted successfully"),
         @ApiResponse(responseCode = "404", description = "Problem not found")
     })
-    public ResponseEntity<Void> deleteProblem(@Parameter(description = "Problem UUID") @PathVariable String id) {
+    public ResponseEntity<Void> deleteProblem(@Parameter(description = "Problem UUID") @PathVariable("id") String id) {
         problemService.deleteProblem(id);
         return ResponseEntity.noContent().build();
     }
