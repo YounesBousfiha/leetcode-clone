@@ -9,6 +9,7 @@ import com.leetcode.judgeservice.domain.exception.JudgeServiceException;
 import com.leetcode.judgeservice.infrastructure.client.dto.ProblemDetailResponse;
 import com.leetcode.judgeservice.infrastructure.client.dto.TestCaseDto;
 import com.leetcode.judgeservice.infrastructure.client.feign.ProblemFeignClient;
+import com.leetcode.judgeservice.infrastructure.client.feign.UserFeignClient;
 import com.leetcode.judgeservice.infrastructure.repository.SubmissionRepository;
 import com.leetcode.judgeservice.presentation.dto.SubmissionRequest;
 import com.leetcode.judgeservice.presentation.dto.SubmissionResponse;
@@ -31,6 +32,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +43,9 @@ class SubmissionServiceTest {
 
     @Mock
     private ProblemFeignClient problemFeignClient;
+
+    @Mock
+    private UserFeignClient userFeignClient;
 
     @Mock
     private ICodeExecutionEngine engine;
@@ -63,7 +68,7 @@ class SubmissionServiceTest {
                 .code("print('hello')").language(ProgrammingLanguage.PYTHON)
                 .status(SubmissionStatus.PENDING).build();
         ProblemDetailResponse problem = new ProblemDetailResponse(
-                "p1", "two-sum", 2.0, 256,
+                "p1", "two-sum", "EASY", 2.0, 256,
                 List.of(new TestCaseDto("[2,7,11]", "[0,1]")));
         SubmissionResult passedResult = SubmissionResult.builder()
                 .passed(true).output("[0,1]").expectedOutput("[0,1]").build();
@@ -80,6 +85,11 @@ class SubmissionServiceTest {
 
         assertThat(result.status()).isEqualTo("ACCEPTED");
         verify(repository, times(2)).save(any(Submission.class));
+        verify(userFeignClient).updateScore(argThat(req ->
+                req.userId().equals(userId.toString())
+                        && req.points() == 10
+                        && req.difficulty().equals("EASY")
+        ));
     }
 
     @Test
@@ -92,7 +102,7 @@ class SubmissionServiceTest {
                 .code("code").language(ProgrammingLanguage.JAVA)
                 .status(SubmissionStatus.PENDING).build();
         ProblemDetailResponse problem = new ProblemDetailResponse(
-                "p1", "two-sum", 2.0, 256,
+                "p1", "two-sum", "MEDIUM", 2.0, 256,
                 List.of(new TestCaseDto("[2,7]", "[0,1]")));
         SubmissionResult failedResult = SubmissionResult.builder()
                 .passed(false).output("[1,0]").expectedOutput("[0,1]").build();
@@ -108,6 +118,7 @@ class SubmissionServiceTest {
         SubmissionResponse result = submissionService.submit(userId, request);
 
         assertThat(result.status()).isEqualTo("WRONG_ANSWER");
+        verify(userFeignClient, never()).updateScore(any());
     }
 
     @Test

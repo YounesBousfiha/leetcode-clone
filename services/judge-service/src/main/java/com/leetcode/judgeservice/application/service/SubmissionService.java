@@ -7,11 +7,14 @@ import com.leetcode.judgeservice.domain.enums.SubmissionStatus;
 import com.leetcode.judgeservice.domain.exception.JudgeServiceException;
 import com.leetcode.judgeservice.infrastructure.client.dto.ProblemDetailResponse;
 import com.leetcode.judgeservice.infrastructure.client.dto.TestCaseDto;
+import com.leetcode.judgeservice.infrastructure.client.dto.UpdateScoreRequest;
 import com.leetcode.judgeservice.infrastructure.client.feign.ProblemFeignClient;
+import com.leetcode.judgeservice.infrastructure.client.feign.UserFeignClient;
 import com.leetcode.judgeservice.infrastructure.repository.SubmissionRepository;
 import com.leetcode.judgeservice.presentation.dto.SubmissionRequest;
 import com.leetcode.judgeservice.presentation.dto.SubmissionResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,9 +27,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SubmissionService {
     private final SubmissionRepository repository;
     private final ProblemFeignClient problemFeignClient;
+    private final UserFeignClient userFeignClient;
     private final ICodeExecutionEngine engine;
     private final SubmissionMapper mapper;
 
@@ -66,7 +71,30 @@ public class SubmissionService {
         submission.setStatus(allPassed ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER);
         submission.setCompletedAt(LocalDateTime.now());
 
+        if (allPassed) {
+            try {
+                String difficulty = problem.difficulty();
+                int points = calculatePoints(difficulty);
+                userFeignClient.updateScore(new UpdateScoreRequest(userId.toString(), points, difficulty));
+            } catch (Exception e) {
+                // Keep submission flow successful even if leaderboard update is temporarily unavailable.
+                log.warn("Unable to update leaderboard for user {} after accepted submission", userId, e);
+            }
+        }
+
         return mapper.toResponse(repository.save(submission));
+    }
+
+    private int calculatePoints(String difficulty) {
+        if (difficulty == null) {
+            return 10;
+        }
+        return switch (difficulty.toUpperCase()) {
+            case "HARD" -> 30;
+            case "MEDIUM" -> 20;
+            case "EASY" -> 10;
+            default -> 10;
+        };
     }
 
     @Transactional(readOnly = true)
