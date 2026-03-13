@@ -42,7 +42,7 @@ public class NoteController {
     })
     public ResponseEntity<UserNoteResponse> getNote(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") String userId,
-            @Parameter(description = "Problem ID") @PathVariable String problemId
+            @Parameter(description = "Problem ID") @PathVariable("problemId") String problemId
 
     ) {
         return ResponseEntity.ok(userNoteService.getNote(userId, problemId));
