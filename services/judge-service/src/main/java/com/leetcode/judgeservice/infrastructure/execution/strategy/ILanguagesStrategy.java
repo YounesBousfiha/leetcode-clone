@@ -12,7 +12,7 @@ public interface ILanguagesStrategy {
 
     String getRunCommand();
 
-    String wrapCode(String userCode);
+    String wrapCode(String userCode, String input);
 
     String getFileName();
 }
