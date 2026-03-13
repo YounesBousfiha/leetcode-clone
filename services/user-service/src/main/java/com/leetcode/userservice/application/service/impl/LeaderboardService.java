@@ -102,11 +102,12 @@ public class LeaderboardService implements ILeaderboardService {
     @Transactional
     public void updateUserScore(String userId, Integer points, String difficulty) {
         UUID id = UUID.fromString(userId);
+        int safePoints = points != null ? points : 0;
 
         // Update profile score
         UserProfile profile = userProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User profile not found"));
-        profile.setScore(profile.getScore() + points);
+        profile.setScore(profile.getScore() + safePoints);
         userProfileRepository.save(profile);
 
         // Update statistics
@@ -120,7 +121,6 @@ public class LeaderboardService implements ILeaderboardService {
         stats.incrementAcceptedSubmissions();
         userStatisticsRepository.save(stats);
 
-        log.info("Updated score for user {} with {} points ({})", userId, points, difficulty);
+        log.info("Updated score for user {} with {} points ({})", userId, safePoints, difficulty);
     }
 }
-
