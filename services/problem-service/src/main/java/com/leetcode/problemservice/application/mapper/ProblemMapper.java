@@ -68,6 +68,7 @@ public interface ProblemMapper {
         return new InternalProblemResponse(
             problem.getId().toString(),
             problem.getSlug(),
+            problem.getDifficulty() != null ? problem.getDifficulty().name() : null,
             problem.getTimeLimit(),
             problem.getMemoryLimit(),
             testCaseDtos
