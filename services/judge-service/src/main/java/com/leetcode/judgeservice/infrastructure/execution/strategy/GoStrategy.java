@@ -26,7 +26,7 @@ public class GoStrategy implements ILanguagesStrategy {
     }
 
     @Override
-    public String wrapCode(String userCode) {
+    public String wrapCode(String userCode, String input) {
         return "package main\n\n" +
                 "import (\n" +
                 "    \"fmt\"\n" +

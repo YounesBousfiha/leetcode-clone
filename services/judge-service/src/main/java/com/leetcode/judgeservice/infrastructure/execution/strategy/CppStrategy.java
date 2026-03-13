@@ -26,7 +26,7 @@ public class CppStrategy implements ILanguagesStrategy {
     }
 
     @Override
-    public String wrapCode(String userCode) {
+    public String wrapCode(String userCode, String input) {
         return "#include <iostream>\n" +
                 "#include <vector>\n" +
                 "#include <string>\n" +
