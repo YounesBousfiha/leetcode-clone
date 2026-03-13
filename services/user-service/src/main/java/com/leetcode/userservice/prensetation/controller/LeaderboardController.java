@@ -1,6 +1,7 @@
 package com.leetcode.userservice.prensetation.controller;
 
 import com.leetcode.userservice.application.service.ILeaderboardService;
+import com.leetcode.userservice.prensetation.dto.UpdateScoreRequest;
 import com.leetcode.userservice.prensetation.dto.LeaderboardResponse;
 import com.leetcode.userservice.prensetation.dto.UserStatisticsResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,6 +54,14 @@ public class LeaderboardController {
             @Parameter(hidden = true) @RequestHeader("X-User-Id") String userId
     ) {
         return ResponseEntity.ok(leaderboardService.getUserStatistics(userId));
+    }
+
+    @PostMapping("/internal/update-score")
+    @Operation(summary = "Internal score update", description = "Internal endpoint for judge-service to update user score and solved stats")
+    @ApiResponse(responseCode = "204", description = "Score updated successfully")
+    public ResponseEntity<Void> updateScoreInternal(@RequestBody UpdateScoreRequest request) {
+        leaderboardService.updateUserScore(request.userId(), request.points(), request.difficulty());
+        return ResponseEntity.noContent().build();
     }
 }
 
