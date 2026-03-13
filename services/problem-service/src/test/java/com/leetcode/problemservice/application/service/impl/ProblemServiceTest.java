@@ -218,7 +218,7 @@ class ProblemServiceTest {
     void getProblemForJudge_shouldReturnProblem() {
         Problem problem = Problem.builder().id(UUID.randomUUID()).title("Two Sum").slug("two-sum").build();
         InternalProblemResponse response = new InternalProblemResponse(
-                problem.getId().toString(), "two-sum", 2.0, 256, List.of());
+                problem.getId().toString(), "two-sum", "EASY", 2.0, 256, List.of());
 
         when(problemRepository.findBySlugWithTestCases("two-sum")).thenReturn(Optional.of(problem));
         when(problemMapper.toInternalResponse(problem)).thenReturn(response);
