@@ -116,6 +116,7 @@ public class LeaderboardService implements ILeaderboardService {
                         .build());
 
         stats.incrementProblemSolved(difficulty);
+        stats.incrementSubmissions();
         stats.incrementAcceptedSubmissions();
         userStatisticsRepository.save(stats);
 

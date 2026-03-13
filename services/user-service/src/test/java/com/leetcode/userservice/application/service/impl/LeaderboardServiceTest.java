@@ -127,6 +127,8 @@ class LeaderboardServiceTest {
         leaderboardService.updateUserScore(userId.toString(), 50, "HARD");
 
         assertThat(profile.getScore()).isEqualTo(150L);
+        assertThat(stats.getTotalSubmissions()).isEqualTo(11);
+        assertThat(stats.getAcceptedSubmissions()).isEqualTo(7);
         verify(userProfileRepository).save(profile);
         verify(userStatisticsRepository).save(stats);
     }
