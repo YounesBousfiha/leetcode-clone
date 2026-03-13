@@ -50,11 +50,18 @@ public class UserStatistics {
 
     public void incrementProblemSolved(String difficulty) {
         this.totalProblemsSolved++;
-        switch (difficulty.toUpperCase()) {
-            case "EASY" -> this.easySolved++;
-            case "MEDIUM" -> this.mediumSolved++;
-            case "HARD" -> this.hardSolved++;
+
+        if (difficulty != null) {
+            switch (difficulty.toUpperCase()) {
+                case "EASY" -> this.easySolved++;
+                case "MEDIUM" -> this.mediumSolved++;
+                case "HARD" -> this.hardSolved++;
+                default -> {
+                    // Unknown difficulty: keep solved count but skip bucket increment.
+                }
+            }
         }
+
         updateStreak();
     }
 
