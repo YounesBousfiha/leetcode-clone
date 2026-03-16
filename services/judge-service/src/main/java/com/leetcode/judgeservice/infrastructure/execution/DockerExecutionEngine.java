@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,16 +27,36 @@ import java.util.stream.Collectors;
 public class DockerExecutionEngine implements ICodeExecutionEngine {
 
     private final Map<ProgrammingLanguage, ILanguagesStrategy> strategies;
-    private static final String TEMP_DIR = System.getProperty("user.dir") + "/temp";
+    private final Path tempBaseDir;
+    private final String sharedDockerVolume;
+    private final String dockerExecutable;
 
 
     public DockerExecutionEngine(List<ILanguagesStrategy> strategyList) {
         this.strategies = strategyList.stream()
                 .collect(Collectors.toMap(ILanguagesStrategy::getLanguage, Function.identity()));
+
+        String configuredTempDir = System.getenv("JUDGE_TEMP_DIR");
+        if (configuredTempDir == null || configuredTempDir.isBlank()) {
+            configuredTempDir = Path.of(System.getProperty("java.io.tmpdir"), "judge-service").toString();
+        }
+        this.tempBaseDir = Path.of(configuredTempDir);
+
+        String configuredVolume = System.getenv("JUDGE_DOCKER_SHARED_VOLUME");
+        this.sharedDockerVolume = (configuredVolume == null || configuredVolume.isBlank()) ? null : configuredVolume;
+
+        String configuredExecutable = System.getenv("JUDGE_DOCKER_EXECUTABLE");
+        this.dockerExecutable = (configuredExecutable == null || configuredExecutable.isBlank())
+                ? "docker"
+                : configuredExecutable;
     }
 
     @PostConstruct
     public void pullDockerImages() {
+        ensureTempBaseDirectoryReady();
+        ensureDockerCliIsReachable();
+        log.info("Judge temp directory ready: {}", tempBaseDir.toAbsolutePath());
+        log.info("Using Docker executable: {}", dockerExecutable);
         log.info("Pre-pulling Docker images for all supported languages...");
         
         strategies.values().forEach(strategy -> {
@@ -43,7 +64,7 @@ public class DockerExecutionEngine implements ICodeExecutionEngine {
             log.info("Pulling Docker image: {}", imageName);
             
             try {
-                ProcessBuilder builder = new ProcessBuilder("docker", "pull", imageName);
+                ProcessBuilder builder = new ProcessBuilder(dockerExecutable, "pull", imageName);
                 builder.inheritIO();
                 Process process = builder.start();
                 
@@ -80,25 +101,42 @@ public class DockerExecutionEngine implements ICodeExecutionEngine {
         }
 
         String executionId = UUID.randomUUID().toString();
-        Path folder = Path.of(TEMP_DIR, executionId);
+        Path folder = tempBaseDir.resolve(executionId);
 
         try {
+            ensureTempBaseDirectoryReady();
             Files.createDirectories(folder);
 
             String wrappedCode = strategy.wrapCode(userCode, input);
             String fileName = strategy.getFileName();
 
             Files.writeString(folder.resolve(fileName), wrappedCode);
-            /* add --rm */
-            ProcessBuilder builder = new ProcessBuilder(
-                    "docker", "run",
+            List<String> command = new ArrayList<>(List.of(
+                    dockerExecutable, "run",
+                    "--rm",
                     "--memory=256m",
-                    "--cpus=0.5",
-                    "-v", folder.toAbsolutePath() + ":/app",
-                    "-w", "/app",
-                    strategy.getDockerImage(),
-                    "/bin/sh", "-c", strategy.getRunCommand()
-            );
+                    "--cpus=0.5"
+            ));
+
+            if (sharedDockerVolume != null) {
+                // Use a named volume in Docker Compose so judge-service and runner containers see the same files.
+                command.add("-v");
+                command.add(sharedDockerVolume + ":/workspace");
+                command.add("-w");
+                command.add("/workspace/" + executionId);
+            } else {
+                command.add("-v");
+                command.add(folder.toAbsolutePath() + ":/app");
+                command.add("-w");
+                command.add("/app");
+            }
+
+            command.add(strategy.getDockerImage());
+            command.add("/bin/sh");
+            command.add("-c");
+            command.add(strategy.getRunCommand());
+
+            ProcessBuilder builder = new ProcessBuilder(command);
 
             Process process = builder.start();
 
@@ -151,6 +189,63 @@ public class DockerExecutionEngine implements ICodeExecutionEngine {
     private String readStream(InputStream s) throws IOException {
         try (s) {
             return new String(s.readAllBytes());
+        }
+    }
+
+    private void ensureTempBaseDirectoryReady() {
+        try {
+            Files.createDirectories(tempBaseDir);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Judge temp directory is not accessible: " + tempBaseDir.toAbsolutePath()
+                            + ". Verify the mounted volume permissions for JUDGE_TEMP_DIR.",
+                    e
+            );
+        }
+
+        if (!Files.isDirectory(tempBaseDir) || !Files.isWritable(tempBaseDir)) {
+            throw new IllegalStateException(
+                    "Judge temp directory is not writable: " + tempBaseDir.toAbsolutePath()
+                            + ". Verify the mounted volume permissions for JUDGE_TEMP_DIR."
+            );
+        }
+    }
+
+    private void ensureDockerCliIsReachable() {
+        try {
+            Process process = new ProcessBuilder(dockerExecutable, "info", "--format", "{{.ServerVersion}}")
+                    .redirectErrorStream(true)
+                    .start();
+            boolean finished = process.waitFor(10, TimeUnit.SECONDS);
+
+            if (!finished) {
+                process.destroyForcibly();
+                throw new IllegalStateException(
+                        "Docker daemon did not respond using '" + dockerExecutable
+                                + "' within 10 seconds. Ensure /var/run/docker.sock is mounted and accessible."
+                );
+            }
+
+            String dockerServerVersion = readStream(process.getInputStream()).trim();
+
+            if (process.exitValue() != 0) {
+                throw new IllegalStateException(
+                        "Docker daemon is not reachable using '" + dockerExecutable
+                                + "'. Ensure /var/run/docker.sock is mounted and accessible to judge-service."
+                                + (dockerServerVersion.isBlank() ? "" : " Details: " + dockerServerVersion)
+                );
+            }
+
+            log.info("Docker daemon reachable. Server version: {}", dockerServerVersion);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Docker executable not found: '" + dockerExecutable
+                            + "'. Install docker-cli in judge-service image or set JUDGE_DOCKER_EXECUTABLE.",
+                    e
+            );
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while checking Docker CLI availability.", e);
         }
     }
 
