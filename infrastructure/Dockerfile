@@ -20,9 +20,9 @@ COPY services/ services/
 ARG SERVICE_PATH
 ARG SERVICE_NAME
 RUN if [ "$SERVICE_PATH" = "infrastructure" ]; then \
-        cd infrastructure/${SERVICE_NAME} && mvn clean package -DskipTests; \
+        cd infrastructure/${SERVICE_NAME} && mvn clean package -Dmaven.test.skip=true; \
     else \
-        cd services/${SERVICE_NAME} && mvn clean package -DskipTests; \
+        cd services/${SERVICE_NAME} && mvn clean package -Dmaven.test.skip=true; \
     fi
 
 # Stage 2: Runtime with JRE
