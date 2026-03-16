@@ -155,46 +155,9 @@ services:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
     command:
       - /bin/sh
-      - -ec
-      - |
-        vault status
-        vault kv put secret/api-gateway jwt.secret=hello1234
-        vault kv put secret/auth-service \
-          spring.datasource.url=jdbc:postgresql://postgres-auth:5432/auth_db \
-          spring.datasource.username=leetcode \
-          spring.datasource.password=leetcode123 \
-          jwt.secret=hello1234 \
-          spring.rabbitmq.host=rabbitmq \
-          spring.rabbitmq.port=5672 \
-          spring.rabbitmq.username=leetcode \
-          spring.rabbitmq.password=leetcode123
-        vault kv put secret/problem-service \
-          spring.datasource.url=jdbc:postgresql://postgres-problem:5432/problem_db \
-          spring.datasource.username=leetcode \
-          spring.datasource.password=leetcode123 \
-          spring.rabbitmq.host=rabbitmq \
-          spring.rabbitmq.port=5672 \
-          spring.rabbitmq.username=leetcode \
-          spring.rabbitmq.password=leetcode123
-        vault kv put secret/judge-service \
-          spring.datasource.url=jdbc:postgresql://postgres-judge:5432/judge_db \
-          spring.datasource.username=leetcode \
-          spring.datasource.password=leetcode123
-        vault kv put secret/user-service \
-          spring.datasource.url=jdbc:postgresql://postgres-user:5432/user_db \
-          spring.datasource.username=leetcode \
-          spring.datasource.password=leetcode123 \
-          spring.rabbitmq.host=rabbitmq \
-          spring.rabbitmq.port=5672 \
-          spring.rabbitmq.username=leetcode \
-          spring.rabbitmq.password=leetcode123
-        vault kv put secret/notification-service \
-          spring.rabbitmq.host=rabbitmq \
-          spring.rabbitmq.port=5672 \
-          spring.rabbitmq.username=leetcode \
-          spring.rabbitmq.password=leetcode123
-        vault kv put secret/ai-assist-service \
-          spring.ai.deepseek.api-key=${DEEPSEEK_API_KEY}
+      - /vault-init.sh
+    volumes:
+      - ./scripts/vault-init.sh:/vault-init.sh:ro
 
   # Eureka Server
   eureka-server:
