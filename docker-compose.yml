@@ -1,23 +1,80 @@
-version: '3.8'
-
 services:
-  # PostgreSQL Database
-  postgres:
+  # PostgreSQL Database - Auth Service
+  postgres-auth:
     image: postgres:15-alpine
-    container_name: leetcode-postgres
+    container_name: leetcode-postgres-auth
     environment:
       POSTGRES_USER: leetcode
       POSTGRES_PASSWORD: leetcode123
-      POSTGRES_DB: leetcode_db
+      POSTGRES_DB: auth_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/postgres-init:/docker-entrypoint-initdb.d
+      - postgres_auth_data:/var/lib/postgresql/data
     networks:
       - leetcode-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U leetcode"]
+      test: ["CMD-SHELL", "pg_isready -U leetcode -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database - User Service
+  postgres-user:
+    image: postgres:15-alpine
+    container_name: leetcode-postgres-user
+    environment:
+      POSTGRES_USER: leetcode
+      POSTGRES_PASSWORD: leetcode123
+      POSTGRES_DB: user_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+    networks:
+      - leetcode-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leetcode -d user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database - Problem Service
+  postgres-problem:
+    image: postgres:15-alpine
+    container_name: leetcode-postgres-problem
+    environment:
+      POSTGRES_USER: leetcode
+      POSTGRES_PASSWORD: leetcode123
+      POSTGRES_DB: problem_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_problem_data:/var/lib/postgresql/data
+    networks:
+      - leetcode-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leetcode -d problem_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database - Judge Service
+  postgres-judge:
+    image: postgres:15-alpine
+    container_name: leetcode-postgres-judge
+    environment:
+      POSTGRES_USER: leetcode
+      POSTGRES_PASSWORD: leetcode123
+      POSTGRES_DB: judge_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_judge_data:/var/lib/postgresql/data
+    networks:
+      - leetcode-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leetcode -d judge_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -60,13 +117,14 @@ services:
 
   # HashiCorp Vault - Secrets Management
   vault:
-    image: vault:latest
+    image: hashicorp/vault:1.16
     container_name: leetcode-vault
     ports:
       - "8200:8200"
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_TOKEN:-myroot}
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      VAULT_ADDR: http://127.0.0.1:8200
     cap_add:
       - IPC_LOCK
     volumes:
@@ -81,18 +139,78 @@ services:
       timeout: 5s
       retries: 5
 
+  # Vault bootstrap - writes app secrets after Vault is healthy
+  vault-init:
+    image: hashicorp/vault:1.16
+    container_name: leetcode-vault-init
+    networks:
+      - leetcode-network
+    depends_on:
+      vault:
+        condition: service_healthy
+    restart: "no"
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN:-myroot}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        vault status
+        vault kv put secret/api-gateway jwt.secret=hello1234
+        vault kv put secret/auth-service \
+          spring.datasource.url=jdbc:postgresql://postgres-auth:5432/auth_db \
+          spring.datasource.username=leetcode \
+          spring.datasource.password=leetcode123 \
+          jwt.secret=hello1234 \
+          spring.rabbitmq.host=rabbitmq \
+          spring.rabbitmq.port=5672 \
+          spring.rabbitmq.username=leetcode \
+          spring.rabbitmq.password=leetcode123
+        vault kv put secret/problem-service \
+          spring.datasource.url=jdbc:postgresql://postgres-problem:5432/problem_db \
+          spring.datasource.username=leetcode \
+          spring.datasource.password=leetcode123 \
+          spring.rabbitmq.host=rabbitmq \
+          spring.rabbitmq.port=5672 \
+          spring.rabbitmq.username=leetcode \
+          spring.rabbitmq.password=leetcode123
+        vault kv put secret/judge-service \
+          spring.datasource.url=jdbc:postgresql://postgres-judge:5432/judge_db \
+          spring.datasource.username=leetcode \
+          spring.datasource.password=leetcode123
+        vault kv put secret/user-service \
+          spring.datasource.url=jdbc:postgresql://postgres-user:5432/user_db \
+          spring.datasource.username=leetcode \
+          spring.datasource.password=leetcode123 \
+          spring.rabbitmq.host=rabbitmq \
+          spring.rabbitmq.port=5672 \
+          spring.rabbitmq.username=leetcode \
+          spring.rabbitmq.password=leetcode123
+        vault kv put secret/notification-service \
+          spring.rabbitmq.host=rabbitmq \
+          spring.rabbitmq.port=5672 \
+          spring.rabbitmq.username=leetcode \
+          spring.rabbitmq.password=leetcode123
+        vault kv put secret/ai-assist-service \
+          spring.ai.deepseek.api-key=${DEEPSEEK_API_KEY}
+
   # Eureka Server
   eureka-server:
     build:
-      context: ./infrastructure/eureka-server
-      dockerfile: ../Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: eureka-server
+        SERVICE_PATH: infrastructure
     container_name: leetcode-eureka
     ports:
       - "8761:8761"
     networks:
       - leetcode-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -100,12 +218,16 @@ services:
   # Config Server
   config-server:
     build:
-      context: ./infrastructure/config-server
-      dockerfile: ../Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: config-server
+        SERVICE_PATH: infrastructure
     container_name: leetcode-config-server
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_HOST: vault
+      VAULT_TOKEN: ${VAULT_TOKEN:-myroot}
       GIT_USERNAME: ${GIT_USERNAME}
       GIT_TOKEN: ${GIT_TOKEN}
     ports:
@@ -113,18 +235,28 @@ services:
     depends_on:
       eureka-server:
         condition: service_healthy
+      vault-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
     networks:
       - leetcode-network
 
   # API Gateway
   api-gateway:
     build:
-      context: ./infrastructure/api-gateway
-      dockerfile: ../Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: api-gateway
+        SERVICE_PATH: infrastructure
     container_name: leetcode-gateway
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
     ports:
       - "8080:8080"
@@ -133,17 +265,22 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      config-server:
+        condition: service_healthy
     networks:
       - leetcode-network
 
   # Auth Service
   auth-service:
     build:
-      context: ./services/auth-service
-      dockerfile: ../../infrastructure/Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+        SERVICE_PATH: services
     container_name: leetcode-auth-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leetcode_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth_db
       SPRING_DATASOURCE_USERNAME: leetcode
       SPRING_DATASOURCE_PASSWORD: leetcode123
       SPRING_RABBITMQ_HOST: rabbitmq
@@ -155,7 +292,7 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      postgres:
+      postgres-auth:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -163,17 +300,22 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      config-server:
+        condition: service_healthy
     networks:
       - leetcode-network
 
   # User Service
   user-service:
     build:
-      context: ./services/user-service
-      dockerfile: ../../infrastructure/Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: user-service
+        SERVICE_PATH: services
     container_name: leetcode-user-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leetcode_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user_db
       SPRING_DATASOURCE_USERNAME: leetcode
       SPRING_DATASOURCE_PASSWORD: leetcode123
       SPRING_RABBITMQ_HOST: rabbitmq
@@ -184,11 +326,13 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      postgres:
+      postgres-user:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
       eureka-server:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
     networks:
       - leetcode-network
@@ -196,11 +340,14 @@ services:
   # Problem Service
   problem-service:
     build:
-      context: ./services/problem-service
-      dockerfile: ../../infrastructure/Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: problem-service
+        SERVICE_PATH: services
     container_name: leetcode-problem-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leetcode_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-problem:5432/problem_db
       SPRING_DATASOURCE_USERNAME: leetcode
       SPRING_DATASOURCE_PASSWORD: leetcode123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -208,9 +355,11 @@ services:
     ports:
       - "8086:8086"
     depends_on:
-      postgres:
+      postgres-problem:
         condition: service_healthy
       eureka-server:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
     networks:
       - leetcode-network
@@ -218,11 +367,14 @@ services:
   # Judge Service
   judge-service:
     build:
-      context: ./services/judge-service
-      dockerfile: ../../infrastructure/Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: judge-service
+        SERVICE_PATH: services
     container_name: leetcode-judge-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leetcode_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-judge:5432/judge_db
       SPRING_DATASOURCE_USERNAME: leetcode
       SPRING_DATASOURCE_PASSWORD: leetcode123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -230,9 +382,11 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      postgres:
+      postgres-judge:
         condition: service_healthy
       eureka-server:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -242,8 +396,11 @@ services:
   # Notification Service
   notification-service:
     build:
-      context: ./services/notification-service
-      dockerfile: ../../infrastructure/Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: notification-service
+        SERVICE_PATH: services
     container_name: leetcode-notification-service
     environment:
       SPRING_RABBITMQ_HOST: rabbitmq
@@ -260,19 +417,24 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      config-server:
+        condition: service_healthy
     networks:
       - leetcode-network
 
   # AI Assist Service
   ai-assist-service:
     build:
-      context: ./services/ai-assist-service
-      dockerfile: ../../infrastructure/Dockerfile
+      context: .
+      dockerfile: infrastructure/Dockerfile
+      args:
+        SERVICE_NAME: ai-assist-service
+        SERVICE_PATH: services
     container_name: leetcode-ai-service
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
-      SPRING_REDIS_HOST: redis
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      doc_HOST: redis
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
     ports:
       - "8084:8084"
@@ -281,11 +443,16 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      config-server:
+        condition: service_healthy
     networks:
       - leetcode-network
 
 volumes:
-  postgres_data:
+  postgres_auth_data:
+  postgres_user_data:
+  postgres_problem_data:
+  postgres_judge_data:
   redis_data:
   rabbitmq_data:
   vault_data:
