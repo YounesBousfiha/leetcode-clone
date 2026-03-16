@@ -327,6 +327,18 @@ services:
     networks:
       - leetcode-network
 
+  # Judge temp volume bootstrap
+  judge-temp-init:
+    image: alpine:3.20
+    container_name: leetcode-judge-temp-init
+    restart: "no"
+    command:
+      - /bin/sh
+      - -c
+      - mkdir -p /judge-temp && chmod 0777 /judge-temp
+    volumes:
+      - judge_temp_data:/judge-temp
+
   # Judge Service
   judge-service:
     build:
@@ -335,13 +347,18 @@ services:
       args:
         SERVICE_NAME: judge-service
         SERVICE_PATH: services
+        INSTALL_DOCKER_CLI: "true"
     container_name: leetcode-judge-service
+    user: "0:0"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-judge:5432/judge_db
       SPRING_DATASOURCE_USERNAME: leetcode
       SPRING_DATASOURCE_PASSWORD: leetcode123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      JUDGE_TEMP_DIR: /judge-temp
+      JUDGE_DOCKER_SHARED_VOLUME: leetcode_judge_temp_data
+      JUDGE_DOCKER_EXECUTABLE: /usr/bin/docker
     ports:
       - "8083:8083"
     depends_on:
@@ -351,6 +368,8 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
+      judge-temp-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 30s
@@ -359,6 +378,7 @@ services:
       start_period: 40s
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - judge_temp_data:/judge-temp
     networks:
       - leetcode-network
 
@@ -434,6 +454,8 @@ volumes:
   postgres_user_data:
   postgres_problem_data:
   postgres_judge_data:
+  judge_temp_data:
+    name: leetcode_judge_temp_data
   redis_data:
   rabbitmq_data:
   vault_data:
