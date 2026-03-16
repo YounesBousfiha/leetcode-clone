@@ -57,7 +57,7 @@ public class SubmissionController {
     @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully")
     public ResponseEntity<List<SubmissionResponse>> getMySubmissionsForProblem(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") String userId,
-            @Parameter(description = "Problem slug") @PathVariable String problemSlug
+            @Parameter(description = "Problem slug") @PathVariable("problemSlug") String problemSlug
     ) {
         return ResponseEntity.ok(submissionService.getUserSubmissionsForProblem(UUID.fromString(userId), problemSlug));
     }
@@ -71,7 +71,7 @@ public class SubmissionController {
     })
     public ResponseEntity<SubmissionResponse> getSubmissionById(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") String userId,
-            @Parameter(description = "Submission UUID") @PathVariable UUID submissionId
+            @Parameter(description = "Submission UUID") @PathVariable("submissionId") UUID submissionId
     ) {
         return ResponseEntity.ok(submissionService.getSubmissionById(submissionId, UUID.fromString(userId)));
     }
