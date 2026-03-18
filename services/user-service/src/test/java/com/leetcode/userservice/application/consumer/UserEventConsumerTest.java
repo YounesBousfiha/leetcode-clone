@@ -10,8 +10,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserEventConsumerTest {
@@ -25,21 +29,31 @@ class UserEventConsumerTest {
     @Test
     @DisplayName("handleUserRegistered - should delegate to userProfileService")
     void handleUserRegistered_shouldDelegateToService() {
-        UserRegisteredEvent event = new UserRegisteredEvent("user-1", "test@example.com", "Test", "token");
+        Map<String, Object> payload = Map.of(
+                "userId", "user-1",
+                "email", "test@example.com",
+                "displayName", "Test",
+                "verificationToken", "token"
+        );
+        UserRegisteredEvent expectedEvent = new UserRegisteredEvent("user-1", "test@example.com", "Test", "token");
 
-        userEventConsumer.handleUserRegistered(event);
+        userEventConsumer.handleUserRegistered(payload);
 
-        verify(userProfileService).createNewProfile(event);
+        verify(userProfileService).createNewProfile(expectedEvent);
     }
 
     @Test
     @DisplayName("handleUserRegistered - should throw AmqpRejectAndDontRequeueException on error")
     void handleUserRegistered_shouldRejectOnError() {
-        UserRegisteredEvent event = new UserRegisteredEvent("user-1", "test@example.com", "Test", "token");
-        doThrow(new RuntimeException("DB error")).when(userProfileService).createNewProfile(event);
+        Map<String, Object> payload = Map.of(
+                "userId", "user-1",
+                "email", "test@example.com",
+                "displayName", "Test",
+                "verificationToken", "token"
+        );
+        doThrow(new RuntimeException("DB error")).when(userProfileService).createNewProfile(any(UserRegisteredEvent.class));
 
-        assertThatThrownBy(() -> userEventConsumer.handleUserRegistered(event))
+        assertThatThrownBy(() -> userEventConsumer.handleUserRegistered(payload))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
     }
 }
-
