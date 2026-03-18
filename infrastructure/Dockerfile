@@ -23,7 +23,11 @@ COPY infrastructure/maven-settings.xml /usr/share/maven/ref/settings-docker.xml
 # Build specific service
 ARG SERVICE_PATH
 ARG SERVICE_NAME
-RUN --mount=type=cache,target=/root/.m2 if [ "$SERVICE_PATH" = "infrastructure" ]; then \
+RUN --mount=type=cache,target=/root/.m2 \
+    if [ "$SERVICE_PATH" != "infrastructure" ] && [ "$SERVICE_PATH" != "services" ]; then \
+        echo "Invalid SERVICE_PATH='$SERVICE_PATH'. Expected 'infrastructure' or 'services'."; \
+        exit 1; \
+    elif [ "$SERVICE_PATH" = "infrastructure" ]; then \
         cd infrastructure/${SERVICE_NAME} && mvn -s /usr/share/maven/ref/settings-docker.xml $MAVEN_CLI_OPTS clean package; \
     else \
         cd services/${SERVICE_NAME} && mvn -s /usr/share/maven/ref/settings-docker.xml $MAVEN_CLI_OPTS clean package; \

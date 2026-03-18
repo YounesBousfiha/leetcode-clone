@@ -50,15 +50,15 @@ jobs:
     strategy:
       matrix:
         service:
-          - { name: auth-service, path: services/auth-service }
-          - { name: user-service, path: services/user-service }
-          - { name: problem-service, path: services/problem-service }
-          - { name: judge-service, path: services/judge-service }
-          - { name: ai-assist-service, path: services/ai-assist-service }
-          - { name: notification-service, path: services/notification-service }
-          - { name: api-gateway, path: infrastructure/api-gateway }
-          - { name: eureka-server, path: infrastructure/eureka-server }
-          - { name: config-server, path: infrastructure/config-server }
+          - { name: auth-service, module_path: services/auth-service, service_root: services }
+          - { name: user-service, module_path: services/user-service, service_root: services }
+          - { name: problem-service, module_path: services/problem-service, service_root: services }
+          - { name: judge-service, module_path: services/judge-service, service_root: services }
+          - { name: ai-assist-service, module_path: services/ai-assist-service, service_root: services }
+          - { name: notification-service, module_path: services/notification-service, service_root: services }
+          - { name: api-gateway, module_path: infrastructure/api-gateway, service_root: infrastructure }
+          - { name: eureka-server, module_path: infrastructure/eureka-server, service_root: infrastructure }
+          - { name: config-server, module_path: infrastructure/config-server, service_root: infrastructure }
 
     steps:
       - uses: actions/checkout@v4
@@ -71,7 +71,10 @@ jobs:
           cache: maven
 
       - name: Build service
-        run: mvn clean package -DskipTests --batch-mode -pl ${{ matrix.service.path }} -am
+        run: mvn clean package -DskipTests --batch-mode -pl ${{ matrix.service.module_path }} -am
+
+      - name: Validate matrix mapping
+        run: test -d "${{ matrix.service.service_root }}/${{ matrix.service.name }}"
 
       - name: Normalize image prefix
         run: echo "IMAGE_PREFIX=${GITHUB_REPOSITORY_OWNER,,}/leetcode" >> "$GITHUB_ENV"
@@ -90,7 +93,7 @@ jobs:
           file: infrastructure/Dockerfile
           build-args: |
             SERVICE_NAME=${{ matrix.service.name }}
-            SERVICE_PATH=${{ matrix.service.path }}
+            SERVICE_PATH=${{ matrix.service.service_root }}
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service.name }}:latest
