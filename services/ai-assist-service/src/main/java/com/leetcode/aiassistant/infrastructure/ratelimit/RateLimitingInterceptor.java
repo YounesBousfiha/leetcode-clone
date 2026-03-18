@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RateLimitingInterceptor implements HandlerInterceptor {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${ai.rate-limit.requests-per-minute:10}")
     private int requestsPerMinute;
@@ -105,12 +105,9 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
     private Long getCurrentCount(String userId, String prefix) {
         String key = prefix + userId;
         try {
-            Object value = redisTemplate.opsForValue().get(key);
-            if (value instanceof Number) {
-                return ((Number) value).longValue();
-            }
-            if (value instanceof String) {
-                return Long.parseLong((String) value);
+            String value = redisTemplate.opsForValue().get(key);
+            if (value != null) {
+                return Long.parseLong(value);
             }
         } catch (Exception e) {
             log.debug("Could not get current count for key {}", key);

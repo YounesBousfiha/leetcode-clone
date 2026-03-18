@@ -34,27 +34,67 @@ public class AdminSeeder implements CommandLineRunner {
 
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
+        String configuredEmail = email == null ? "admin@codemasters.com" : email.trim().toLowerCase();
+        String configuredPassword = (password == null || password.isBlank()) ? "Admin@12345" : password;
 
-        boolean isAdminExist = userRepository.existsByEmail(email);
+        User admin = userRepository.findByEmail(configuredEmail)
+                .orElseGet(() -> userRepository.findByRole(Role.ADMIN).orElse(null));
 
-        if(!isAdminExist) {
+        if(admin == null) {
             User rootAdmin = User.builder()
                     .displayName("Root Admin")
-                    .email(email)
-                    .password(passwordEncoder.encode(password))
+                    .email(configuredEmail)
+                    .password(passwordEncoder.encode(configuredPassword))
                     .role(Role.ADMIN)
                     .verified(true)
                     .build();
 
-
             this.userRepository.save(rootAdmin);
-            log.info("✅ Root Admin Account seeded");
+            log.info("Root Admin account seeded with configured credentials");
         } else {
-            log.info("✅ Root Admin Already in the Database");
+            boolean changed = false;
+
+            if(!admin.getEmail().equalsIgnoreCase(configuredEmail)) {
+                boolean emailUsedByAnotherUser = userRepository.findByEmail(configuredEmail)
+                        .filter(existing -> !existing.getId().equals(admin.getId()))
+                        .isPresent();
+
+                if(emailUsedByAnotherUser) {
+                    log.warn("Admin email update skipped because '{}' is already used by another account", configuredEmail);
+                } else {
+                    admin.setEmail(configuredEmail);
+                    changed = true;
+                }
+            }
+
+            // Force password sync on each startup so configured credentials always work.
+            admin.setPassword(passwordEncoder.encode(configuredPassword));
+            changed = true;
+
+            if(!admin.isVerified()) {
+                admin.setVerified(true);
+                changed = true;
+            }
+
+            if(admin.getRole() != Role.ADMIN) {
+                admin.setRole(Role.ADMIN);
+                changed = true;
+            }
+
+            if(!"Root Admin".equals(admin.getDisplayName())) {
+                admin.setDisplayName("Root Admin");
+                changed = true;
+            }
+
+            if(changed) {
+                userRepository.save(admin);
+                log.info("Root Admin account updated with configured credentials");
+            } else {
+                log.info("Root Admin already up to date");
+            }
         }
 
-        // Seed test users
         seedTestUsers();
     }
 
@@ -62,18 +102,18 @@ public class AdminSeeder implements CommandLineRunner {
         List<User> testUsers = new ArrayList<>();
 
         String[][] users = {
-            {"john.doe@example.com", "John Doe"},
-            {"jane.smith@example.com", "Jane Smith"},
-            {"alice.wonder@example.com", "Alice Wonder"},
-            {"bob.builder@example.com", "Bob Builder"},
-            {"charlie.brown@example.com", "Charlie Brown"}
+                {"john.doe@example.com", "John Doe"},
+                {"jane.smith@example.com", "Jane Smith"},
+                {"alice.wonder@example.com", "Alice Wonder"},
+                {"bob.builder@example.com", "Bob Builder"},
+                {"charlie.brown@example.com", "Charlie Brown"}
         };
 
-        for (String[] userData : users) {
+        for(String[] userData : users) {
             String userEmail = userData[0];
             String displayName = userData[1];
 
-            if (!userRepository.existsByEmail(userEmail)) {
+            if(!userRepository.existsByEmail(userEmail)) {
                 User testUser = User.builder()
                         .email(userEmail)
                         .displayName(displayName)
@@ -85,11 +125,11 @@ public class AdminSeeder implements CommandLineRunner {
             }
         }
 
-        if (!testUsers.isEmpty()) {
+        if(!testUsers.isEmpty()) {
             userRepository.saveAll(testUsers);
-            log.info("✅ Seeded {} test users", testUsers.size());
+            log.info("Seeded {} test users", testUsers.size());
         } else {
-            log.info("✅ Test users already exist");
+            log.info("Test users already exist");
         }
     }
 }

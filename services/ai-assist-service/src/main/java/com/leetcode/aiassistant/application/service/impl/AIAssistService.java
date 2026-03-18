@@ -27,7 +27,7 @@ public class AIAssistService implements IAIAssistService {
     private final ChatClient chatClient;
 
     @Override
-    @Cacheable(value = "ai_hints", key = "#problemSlug + ':' + #language", unless = "#result == null")
+    @Cacheable(value = "ai_hints_v2", key = "#problemSlug + ':' + #language", unless = "#result == null")
     public AIHintResponse getHint(String problemSlug, String userCode, String language) {
         log.info("Getting hint for problem: {} in language: {} (not cached)", problemSlug, language);
 
@@ -53,7 +53,7 @@ public class AIAssistService implements IAIAssistService {
     }
 
     @Override
-    @Cacheable(value = "ai_explanations", key = "#problemSlug", unless = "#result == null")
+    @Cacheable(value = "ai_explanations_v2", key = "#problemSlug", unless = "#result == null")
     public AIHintResponse explainProblem(String problemSlug) {
         log.info("Explaining problem: {} (not cached)", problemSlug);
 

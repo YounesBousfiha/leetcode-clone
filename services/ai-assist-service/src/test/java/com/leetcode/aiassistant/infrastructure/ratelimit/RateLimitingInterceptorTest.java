@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -26,10 +26,10 @@ import static org.mockito.Mockito.*;
 class RateLimitingInterceptorTest {
 
     @Mock
-    private RedisTemplate<String, Object> redisTemplate;
+    private StringRedisTemplate redisTemplate;
 
     @Mock
-    private ValueOperations<String, Object> valueOperations;
+    private ValueOperations<String, String> valueOperations;
 
     @Mock
     private HttpServletRequest request;
@@ -47,11 +47,11 @@ class RateLimitingInterceptorTest {
         ReflectionTestUtils.setField(interceptor, "requestsPerMinute", 10);
         ReflectionTestUtils.setField(interceptor, "requestsPerHour", 100);
 
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         responseWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(responseWriter);
-        when(response.getWriter()).thenReturn(printWriter);
+        lenient().when(response.getWriter()).thenReturn(printWriter);
     }
 
     @Test
