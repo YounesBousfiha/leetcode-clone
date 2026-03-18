@@ -22,7 +22,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/leetcode
   ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
 
 jobs:
@@ -37,6 +36,7 @@ jobs:
       - name: Update ArgoCD manifests with new image tags
         run: |
           IMAGE_TAG=${{ github.sha }}
+          IMAGE_PREFIX="${GITHUB_REPOSITORY_OWNER,,}/leetcode"
           SERVICES=(auth-service user-service problem-service judge-service ai-assist-service notification-service api-gateway eureka-server)
           for SERVICE in "${SERVICES[@]}"; do
             if [ -f "argocd/${SERVICE}.yaml" ]; then
