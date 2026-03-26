@@ -1,0 +1,194 @@
+@startuml LeetCodeClone_EntityClassDiagram
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam classBackgroundColor #E1F5FE
+
+title LeetCode Clone - Diagramme des Entités par Service
+
+package "Auth Service - Entités" {
+  enum Role {
+    ADMIN
+    USER
+  }
+
+  class User {
+    - id : UUID
+    - email : String
+    - password : String
+    - displayName : String
+    - verified : boolean
+    - role : Role
+    - createdAt : LocalDateTime
+    - updatedAt : LocalDateTime
+  }
+
+  class EmailVerification {
+    - uuid : UUID
+    - verificationToken : String
+    - isUsed : boolean
+    - expiryDate : LocalDateTime
+    - user : User
+  }
+
+  class PasswordResetToken {
+    - id : UUID
+    - token : String
+    - expiryDate : LocalDateTime
+    - used : boolean
+    - user : User
+  }
+
+  User "1" -- "*" EmailVerification : has
+  User "1" -- "*" PasswordResetToken : has
+  User --> Role : uses
+}
+
+package "Problem Service - Entités" {
+  enum Difficulty {
+    EASY
+    MEDIUM
+    HARD
+  }
+
+  class Problem {
+    - id : UUID
+    - title : String
+    - slug : String
+    - description : String
+    - difficulty : Difficulty
+    - timeLimit : Double
+    - memoryLimit : Integer
+    - tags : Set<Tag>
+    - testCases : List<TestCase>
+    - hints : List<String>
+    - codeTemplates : List<CodeTemplate>
+  }
+
+  class TestCase {
+    - id : UUID
+    - input : String
+    - expectedOutput : String
+    - isPublic : boolean
+    - problem : Problem
+  }
+
+  class Tag {
+    - id : UUID
+    - name : String
+    - slug : String
+  }
+
+  class CodeTemplate {
+    - id : UUID
+    - language : String
+    - template : String
+    - problem : Problem
+  }
+
+  Problem "1" *-- "*" TestCase : contains
+  Problem "1" *-- "*" CodeTemplate : contains
+  Problem "*" -- "*" Tag : has
+  Problem --> Difficulty : uses
+}
+
+package "Judge Service - Entités" {
+  enum ProgrammingLanguage {
+    JAVA
+    PYTHON
+    JAVASCRIPT
+    CPP
+    GO
+  }
+
+  enum SubmissionStatus {
+    PENDING
+    PROCESSING
+    ACCEPTED
+    WRONG_ANSWER
+    TIME_LIMIT_EXCEEDED
+    MEMORY_LIMIT_EXCEEDED
+    COMPILATION_ERROR
+    RUNTIME_ERROR
+    INTERNAL_ERROR
+  }
+
+  class Submission {
+    - id : UUID
+    - userID : UUID
+    - problemSlug : String
+    - code : String
+    - language : ProgrammingLanguage
+    - status : SubmissionStatus
+    - executionTime : Double
+    - memoryUsed : long
+    - createdAt : LocalDateTime
+    - completedAt : LocalDateTime
+    - resultList : List<SubmissionResult>
+  }
+
+  class SubmissionResult {
+    - id : UUID
+    - testCaseId : String
+    - passed : boolean
+    - output : String
+    - expectedOutput : String
+    - executionTime : Double
+    - memoryUsed : Long
+    - errorMessage : String
+    - submission : Submission
+  }
+
+  Submission "1" *-- "*" SubmissionResult : contains
+  Submission --> ProgrammingLanguage : uses
+  Submission --> SubmissionStatus : uses
+}
+
+package "User Service - Entités" {
+  class UserProfile {
+    - id : UUID
+    - email : String
+    - displayName : String
+    - bio : String
+    - githubUrl : String
+    - linkedinUrl : String
+    - score : Long
+    - createdAt : LocalDateTime
+    - updatedAt : LocalDateTime
+  }
+
+  class UserNote {
+    - id : UUID
+    - problemId : String
+    - content : String
+    - userProfile : UserProfile
+    - lastUpdated : LocalDateTime
+  }
+
+  class UserStatistics {
+    - userId : UUID
+    - totalProblemsSolved : Integer
+    - easySolved : Integer
+    - mediumSolved : Integer
+    - hardSolved : Integer
+    - totalSubmissions : Integer
+    - acceptedSubmissions : Integer
+    - currentStreak : Integer
+    - longestStreak : Integer
+    - lastSolvedDate : LocalDate
+    - createdAt : LocalDate
+  }
+
+  UserProfile "1" -- "*" UserNote : has
+  UserProfile "1" -- "1" UserStatistics : tracks
+}
+
+note bottom
+  Ce diagramme montre les entités principales de chaque service
+  et leurs relations (1:1, 1:N, N:N) selon les mappings JPA.
+  Les relations entre services sont gérées via IDs ou appels Feign.
+end note
+
+
+@enduml

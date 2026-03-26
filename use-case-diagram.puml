@@ -1,0 +1,78 @@
+@startuml LeetCodeClone_UseCaseDiagram
+
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title LeetCode Clone - Use Case Diagram
+
+actor "Visiteur" as Visitor
+actor "Utilisateur connecté" as User
+actor "Admin" as Admin
+
+rectangle "LeetCode Clone Platform" {
+  usecase "S'inscrire" as UC_Register
+  usecase "Verifier email" as UC_VerifyEmail
+  usecase "Se connecter" as UC_Login
+  usecase "Rafraichir token" as UC_Refresh
+  usecase "Se deconnecter" as UC_Logout
+
+  usecase "Consulter liste des problemes" as UC_ListProblems
+  usecase "Filtrer/Rechercher problemes" as UC_FilterSearch
+  usecase "Consulter detail probleme" as UC_ViewProblem
+
+  usecase "Soumettre du code" as UC_SubmitCode
+  usecase "Consulter mes soumissions" as UC_ViewMySubmissions
+
+  usecase "Consulter/Modifier mon profil" as UC_Profile
+  usecase "Sauvegarder mes notes" as UC_Notes
+  usecase "Consulter leaderboard" as UC_Leaderboard
+  usecase "Consulter mes statistiques" as UC_Stats
+
+  usecase "Obtenir un hint IA" as UC_AIHint
+  usecase "Expliquer un probleme" as UC_AIExplain
+  usecase "Demander une review de code" as UC_AIReview
+
+  usecase "Creer un probleme" as UC_CreateProblem
+  usecase "Supprimer un probleme" as UC_DeleteProblem
+
+  usecase "Mettre a jour score interne" as UC_UpdateScore
+  usecase "Creer profil apres inscription" as UC_CreateProfileEvent
+  usecase "Envoyer email de verification" as UC_SendVerifyMail
+  usecase "Envoyer email de reset password" as UC_SendResetMail
+}
+
+Visitor --> UC_Register
+Visitor --> UC_VerifyEmail
+Visitor --> UC_Login
+Visitor --> UC_ListProblems
+Visitor --> UC_FilterSearch
+Visitor --> UC_ViewProblem
+
+User --> UC_Refresh
+User --> UC_Logout
+User --> UC_SubmitCode
+User --> UC_ViewMySubmissions
+User --> UC_Profile
+User --> UC_Notes
+User --> UC_Leaderboard
+User --> UC_Stats
+User --> UC_AIHint
+User --> UC_AIExplain
+User --> UC_AIReview
+
+Admin --> UC_Login
+Admin --> UC_Refresh
+Admin --> UC_Logout
+Admin --> UC_CreateProblem
+Admin --> UC_DeleteProblem
+Admin --> UC_Leaderboard
+
+
+UC_SubmitCode ..> UC_UpdateScore : <<include>>
+UC_Register ..> UC_CreateProfileEvent : <<include>>
+UC_Register ..> UC_SendVerifyMail : <<include>>
+UC_Login ..> UC_Refresh : <<extend>>
+
+@enduml
+
